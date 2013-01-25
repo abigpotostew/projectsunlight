@@ -14,8 +14,8 @@ display.setStatusBar( display.HiddenStatusBar )
 local options = 
 {
 	-- Required params
-	width = 64,
-	height = 64,
+	width = 32,
+	height = 32,
 	numFrames = 256,
 
 	-- content scaling
@@ -32,22 +32,22 @@ local options = { frames = {},
 	sheetContentWidth = 1024,
 	sheetContentHeight = 1024, 
 }
-local frameWidth = 64
-local frameHeight = 64
-for i=0,15 do
-	table.insert(options.frames,{x=64*i,y=0,width=frameWidth,height=frameHeight})
+local frameWidth = 32
+local frameHeight = 32
+for i=0,32 do
+	table.insert(options.frames,{x=32*i,y=0,width=frameWidth,height=frameHeight})
 end
 
 -- (2) Generate the remaining 256 frames programatically:
 -- Instead of typing them all out, we just duplicate the first row 15 more times,
 -- adjusting the y value as necessary.
 local frames = options.frames
-for j=1,15 do
-	for i=1,16 do
+for j=1,30 do
+	for i=1,32 do
 		local src = frames[i]
 		local element = {
 			x = src.x,
-			y = 64 * j,
+			y = 32 * j,
 			width = src.width,
 			height = src.height,
 		}
@@ -59,8 +59,8 @@ local sheet = graphics.newImageSheet( "dancers.png", options )
 
 local sequenceData = {}
 
-local w = 64
-local h = 64
+local w = 32
+local h = 32
 local halfW = w*0.5
 local halfH = h*0.5
 
@@ -68,12 +68,12 @@ local function createTiles( x, y, xMax, yMax, group )
 	local xStart = x
 	local j = 0
 	while ( true ) do
-		local i = 1+math.fmod( j, 16 )
+		local i = 1+math.fmod( j, 32 )
 		j = j + 1
 		
 		local dancer = "dancer" .. i
-		local numFrames = 16
-		local start = (i % 16)*numFrames + 1
+		local numFrames = 32
+		local start = (i % 32)*numFrames + 1
 		local sequence = { name=dancer, start=start, count=numFrames, loopDirection="bounce" }
 
 		local sprite
