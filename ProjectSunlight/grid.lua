@@ -7,6 +7,8 @@ require("tile")
 
 -- debug stuff
 local informationText = nil
+
+--finger drag tile
 local selectedTileOverlay = nil
 --local tileProperties = nil
 
@@ -40,6 +42,22 @@ local sheetData = {
 	}
 local sheet = graphics.newImageSheet( "tiles.png", sheetData ) --load the actual spritesheet
 
+--each tile can be any one of these tiles
+--use spite:setSequence("FRAME NAME") to swap out the animation
+local sequenceData = {
+	{name="wood", start=1, count = 1,time=0},
+	{name="grass", start=2, count = 1,time=0},
+	{name="horz", start=3, count = 1,time=0},
+	{name="leftdown", start=4, count = 1,time=0},
+	{name="rightdown", start=5, count = 1,time=0},
+	{name="stone", start=6, count = 1,time=0},
+	{name="leftup", start=7, count = 1,time=0},
+	{name="rightup", start=8, count = 1,time=0},
+	{name="vert", start=9, count = 1,time=0},
+	{name="water", start=10, count = 1,time=0},
+	{name="overlay", start=11, count = 1,time=0}
+}
+
 local w = tileSize
 local h = tileSize
 local halfW = w*0.5
@@ -67,39 +85,73 @@ local function buildTile(_sprite, _id)
 	return { sprite=_sprite, id=_id}
 end
 
+local function setSpritePipe(sprite)
+	if sprite.left or sprite.right then
+		sprite:setSequence("horz",sprite)
+	elseif sprite.up or sprite.down then
+		sprite:setSequence("vert",sprite)
+	end
+	if sprite.left and sprite.up then
+		sprite:setSequence("leftup",sprite)
+	end
+	if sprite.left and sprite.down then
+		sprite:setSequence("leftdown",sprite)
+	end
+	if sprite.right and sprite.up then
+		sprite:setSequence("rightup",sprite)
+	end
+	if sprite.right and sprite.down then
+		sprite:setSequence("rightdown",sprite)
+	end
+end
+
+local function setSequence(seqName, sprite)
+	sprite:setSequence(seqName)
+	sprite:play()
+end
+
 local function createTiles( x, y, xMax, yMax, group )
 	local xStart = x
 	local j = 0
 	
-	--each tile can be any one of these tiles
-	--use spite:setSequence("FRAME NAME") to swap out the animation
-	local sequenceData = {
-		{name="wood", start=1, count = 1,time=0},
-		{name="grass", start=2, count = 1,time=0},
-		{name="horz", start=3, count = 1,time=0},
-		{name="leftdown", start=4, count = 1,time=0},
-		{name="rightdown", start=5, count = 1,time=0},
-		{name="stone", start=6, count = 1,time=0},
-		{name="leftup", start=7, count = 1,time=0},
-		{name="rightup", start=8, count = 1,time=0},
-		{name="vert", start=9, count = 1,time=0},
-		{name="water", start=10, count = 1,time=0}
-		{name="overlay", start=11, count = 1,time=0}
-	}
+	
 	
 	--Event listener for each tile!
 	local function getTileAtGridPosition( event )
 		local currTile = event.target
 		
 		if event.phase == "began" then
-			startTile = tile
-			prevTile = nil
+			startTile = currTile
+			prevTile = currTile
+			selectedTileOverlay.isVisible = true
+			selectedTileOverlay.x = currTile.x
+			selectedTileOverlay.y = currTile.y
+			--print(selectedTileOverlay.visible)
 		elseif event.phase == "moved" then
-			if currTile != prevTile then
-				
-		elseif event.pahse == "ended" or event.phase == "cancelled" then
-			
+			if currTile ~= prevTile then
+				selectedTileOverlay.x = currTile.x
+				selectedTileOverlay.y = currTile.y
+			--else --user finger is in next tile
+				if currTile.x < prevTile.x then
+					prevTile.left = true
+				end
+				if currTile.x > prevTile.x then
+					prevTile.right = true
+				end
+				if currTile.y < prevTile.y then
+					prevTile.up = true
+				end
+				if currTile.y > prevTile.y then
+					prevTile.down = true
+				end
+				setSpritePipe(prevTile)
+				--TODO:this is a possible bug,currently no diagonal pipe error check exists
+			end
+		elseif event.phase == "ended" or event.phase == "cancelled" then
+			selectedTileOverlay.isVisible = false
 		end
+		
+		prevTile = currTile
 		
 		-- Update the information text to show the tile at the selected position
 		informationText.text = "Tile At Selected Grid Position Is: " .. currTile.id
@@ -116,10 +168,14 @@ local function createTiles( x, y, xMax, yMax, group )
 			local sprite = display.newSprite(sheet, sequenceData )
 			group:insert(sprite)
 			sprite:translate(iX*tileWidth,jY*tileHeight)
-			local sequenceId = sequences[(iX+jY)%10]
+			local sequenceId = "grass"--sequences[(iX+jY)%10]
 			sprite:setSequence(sequenceId)
 			sprite:play()
 			sprite.id = sequenceId
+			sprite.left = false
+			sprite.right = false
+			sprite.up = false
+			sprite.down = false
 			--grid[iX][jY] = Tile(sprite,sequenceId)
 			
 			sprite:addEventListener( "touch", getTileAtGridPosition )
@@ -136,11 +192,7 @@ local function createTileGroup( nx, ny )
 	group.xMax = halfW
 	group.yMax = halfH
 	
-	selectedTileOverlay = display.newSprite(sheet, sequenceData )
-	selectedTileOverlay:setSequence("overlay")
-	sprite:play()
-	selectedTileOverlay.alpha = 0.4
-	selectedTileOverlay.isVisible = false
+	
 	
 	function group:touch( event )
 		if ( "began" == event.phase ) then
@@ -175,6 +227,15 @@ local function createTileGroup( nx, ny )
 	local yMax = ny * display.contentHeight
 	
 	createTiles( x, y, xMax, yMax, group )
+	
+	--This comes after creating tiles so it shows up on top of the grid
+	--This guy shows up wherever the players finger is
+	selectedTileOverlay = display.newSprite(sheet, sequenceData )
+	selectedTileOverlay:setSequence("overlay")
+	selectedTileOverlay:play()
+	selectedTileOverlay.alpha = .5
+	selectedTileOverlay.isVisible = false
+	group:insert(selectedTileOverlay)
 
 	return group
 end
