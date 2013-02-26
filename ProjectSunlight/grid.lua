@@ -21,7 +21,7 @@ local tileWidth = tileSize --we have square tiles
 local tileHeight = tileSize --we have square tiles
 local gridColumns = 32 -- number of grid tiles across
 local gridRows = 24 -- number of grid tiles down
-local tileSheetWidth = 192 --width of sheet image
+local tileSheetWidth = 256 --width of sheet image
 local tileSheetHeight = 256 --height of sheet image
 
 local grid = {} --a 2D array of sprites and their id and stuff
@@ -36,7 +36,7 @@ end
 local sheetData = { 
 	width=tileWidth,
 	height=tileHeight,
-	numFrames=11,
+	numFrames=15,
 	sheetContentWidth=tileSheetWidth,
 	sheetContentHeight=tileSheetHeight
 	}
@@ -55,7 +55,11 @@ local sequenceData = {
 	{name="rightup", start=8, count = 1,time=0},
 	{name="vert", start=9, count = 1,time=0},
 	{name="water", start=10, count = 1,time=0},
-	{name="overlay", start=11, count = 1,time=0}
+	{name="overlay", start=11, count = 1,time=0},
+	{name="leftstop", start=12, count = 1,time=0},
+	{name="rightstop", start=13, count = 1,time=0},
+	{name="upstop", start=14, count = 1,time=0},
+	{name="downstop", start=15, count = 1,time=0}
 }
 
 local w = tileSize
@@ -79,6 +83,10 @@ local sequences = {}
 	sequences[8] = "vert"
 	sequences[9] = "water"
 	sequences[10] = "overlay"
+	sequences[11] = "leftstop"
+	sequences[12] = "rightstop"
+	sequences[13] = "upstop"
+	sequences[14] = "downstop"
 
 --build a tile table, which keeps track of the sprite and it's current animation (id)
 local function buildTile(_sprite, _id)
@@ -131,7 +139,6 @@ local function createTiles( x, y, xMax, yMax, group )
 			if currTile ~= prevTile then
 				selectedTileOverlay.x = currTile.x
 				selectedTileOverlay.y = currTile.y
-			--else --user finger is in next tile
 				if currTile.x < prevTile.x then
 					prevTile.left = true
 				end
@@ -245,7 +252,7 @@ local ny = 2
 local group = createTileGroup( nx, ny )
 
 --until multitouch zoom is implemented, just zoom out all the way.
-group:scale(1/2,0.5)
+group:scale(1,1)
 
 informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 
