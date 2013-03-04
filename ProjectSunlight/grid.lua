@@ -228,7 +228,42 @@ local function setSequence(seqName, sprite)
 	sprite:play()
 end
 
+--Bresenhams line algorithm
+local function bresenhams(start,dest)
+	local x0 = start.gridX
+	local y0 = start.gridY
+	local x1 = dest.gridX
+	local y1 = dest.gridY
+	local dx = math.abs(x1-x0)
+	local dy = math.abs(y1-y0) 
+	local sx, sy
+	if x0 < x1 then sx = 1 else sx = -1 end
+	if y0 < y1 then sy = 1 else sy = -1 end
+	local err = dx-dy
+	local path = {}
+ 
+	while true do
+		--setPixel(x0,y0)
+		table.insert(path,{x=x0,y=y0})
+	    if x0 == x1 and y0 == y1 then
+			break
+		end
+	    local e2 = 2*err
+	    if e2 > -dy then 
+	    	err = err - dy
+	       	x0 = x0 + sx
+	    end
+	    if e2 <  dx then 
+	       err = err + dx
+	       y0 = y0 + sy 
+	    end
+	end
+	return path
+end
 
+local function distance(A,B)
+	return math.sqrt((B.gridX-A.gridX)*(B.gridX-A.gridX)+(B.gridY-A.gridY)*(B.gridY-A.gridY))*tileSize
+end
 
 local function createTiles( x, y, xMax, yMax, group )
 	local xStart = x
@@ -279,6 +314,22 @@ local function createTiles( x, y, xMax, yMax, group )
 				currTile.group.y = y
 			elseif isPiping == true then
 				if currTile ~= prevTile then
+					
+					-- if distance(currTile,prevTile) > tileSize+1 then
+-- 						print("start:"..currTile.gridX..","..currTile.gridY)
+-- 						print("end:"..prevTile.gridX..","..prevTile.gridY)
+-- 						local path = bresenhams(prevTile,currTile)
+-- 						for i=1, #path do
+-- 							local point = path[i]
+-- 							print("x: "..point.x..", y:"..point.y)
+-- 						end
+-- 					end 
+					local path = bresenhams(prevTile,currTile)
+					for i=1, #path do
+						local point = path[i]
+						--print("x: "..point.x..", y:"..point.y)
+					end
+					
 					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
 					--if freshPipe then print("fresh!") end
 					local canPipe = (canPipeHere(currTile))
