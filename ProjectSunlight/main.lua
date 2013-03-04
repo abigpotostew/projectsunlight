@@ -12,6 +12,8 @@ local screen = require("screen")
 local grid = require("grid")
 
 
+
+
 --print FPS info
 local prevTime = system.getTimer()
 local fps = display.newText( "30", 30, 47, nil, 24 )
