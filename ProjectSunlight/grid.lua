@@ -9,7 +9,7 @@ require("constants")
 tile =
   {
   NO_PIPE = -1, --can't build pipes on grid locations here
-  ENERGY_SRC = -2,
+  ENERGY = -2,
   TOWER = -3,
   EMPTY = 0 --a grid position that has no pipe yet
   }
@@ -40,7 +40,7 @@ local tileSheetWidth = 256 --width of sheet image
 local tileSheetHeight = 256 --height of sheet image
 
 --must initially be set to 1, just cus!
-local pipeCount = 1;
+local pipeCount = 0;
 local currentPipe = -1;
 
 local isScrolling = false
@@ -64,7 +64,7 @@ end
 local sheetData = { 
 	width=tileWidth,
 	height=tileHeight,
-	numFrames=15,
+	numFrames=16,
 	sheetContentWidth=tileSheetWidth,
 	sheetContentHeight=tileSheetHeight
 	}
@@ -87,7 +87,8 @@ local sequenceData = {
 	{name="leftstop", start=12, count = 1,time=0},
 	{name="rightstop", start=13, count = 1,time=0},
 	{name="upstop", start=14, count = 1,time=0},
-	{name="downstop", start=15, count = 1,time=0}
+	{name="downstop", start=15, count = 1,time=0},
+	{name="badpipe", start=16, count = 1,time=0}
 }
 
 local w = tileSize
@@ -99,7 +100,7 @@ local halfH = h*0.5
 local startTile = nil
 local prevTile = nil
 
-local sequences = {}
+--[[local sequences = {}
 	sequences[0] = "wood"
 	sequences[1] = "grass"
 	sequences[2] = "horz"
@@ -115,6 +116,7 @@ local sequences = {}
 	sequences[12] = "rightstop"
 	sequences[13] = "upstop"
 	sequences[14] = "downstop"
+	sequences[15] = "badpipe"]]--
 
 --build a tile table, which keeps track of the sprite and it's current animation (id)
 local function buildTile(_sprite, _id)
@@ -128,13 +130,15 @@ end
 
 local function canStartPipe(currTile)
 	local out = false
-	local type = getTileType(_sprite)
-	local grid = currTile.grid
+	local type = getTileType(currTile)
+	--local grid = currTile.grid
 	--You can start dragging a pipe when the initial touch begins on an energy source
 	--or on the end of a pipe
-	if type == tile.ENERGY or ( type > tile.EMPTY and grid.Out >= pipe.None and grid.In == pipe.NONE) then
+	if type == tile.ENERGY or 
+		( type > tile.EMPTY and 
+		  currTile.grid.Out == pipe.NONE 
+		  and currTile.grid.In > pipe.NONE) then
 		out = true
-		print("starting pipe")
 	end
 	return out
 end
@@ -237,25 +241,29 @@ local function createTiles( x, y, xMax, yMax, group )
 		if event.phase == "began" then
 			--print(getTileType(currTile))
 			local tileType = getTileType(currTile)
-			if getTileType(currTile) == tile.EMPTY then
+			if tileType == tile.EMPTY then
 				isDragging = true
 				currTile.group.xStart = currTile.group.x
 				currTile.group.yStart = currTile.group.y
 				currTile.group.xBegan = event.x
 				currTile.group.yBegan = event.y
 				print("start scrolling")
-			else
-				if canStartPipe(currTile) == true then
-					
-				end
+			elseif canStartPipe(currTile) == true then
 				isPiping = true
 				startTile = currTile
 				prevTile = currTile
 				selectedTileOverlay.isVisible = true
 				selectedTileOverlay.x = currTile.x
 				selectedTileOverlay.y = currTile.y
-				
-				print("start piping")
+				setSequence("overlay",selectedTileOverlay)
+				print("start piping WOO!")
+			else
+				isBadPiping = true
+				selectedTileOverlay.isVisible = true
+				setSequence("badpipe",selectedTileOverlay)
+				selectedTileOverlay.x = currTile.x
+				selectedTileOverlay.y = currTile.y
+				print("bad pipe!")
 			end
 		elseif event.phase == "moved" then
 			if isDragging == true then
@@ -271,10 +279,21 @@ local function createTiles( x, y, xMax, yMax, group )
 				currTile.group.y = y
 			elseif isPiping == true then
 				if currTile ~= prevTile then
-					local canPipe = (canPipeHere(prevTile) == true and currentPipe < 0) or (canPipeHere(currTile))
+					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
+					--if freshPipe then print("fresh!") end
+					local canPipe = (canPipeHere(currTile))
+					if canPipe then print("can pipe!") end
+					if getTileType(prevTile) == tile.ENERGY and getTileType(currTile) == tile.EMPTY then
+						pipeCount = pipeCount + 1
+					end
+					--freshPipe == true or
 					if canPipe == true then
-						if currentPipe < 0 then
-							currentPipe = pipeCount
+						if currentPipe < 0 then 
+							if prevTile.grid.type <= 0 then
+								currentPipe = pipeCount
+							else
+								currentPipe = prevTile.grid.type
+							end
 						end
 						currTile.grid.type = currentPipe
 						selectedTileOverlay.x = currTile.x
@@ -282,10 +301,17 @@ local function createTiles( x, y, xMax, yMax, group )
 						setPipe(currTile, prevTile)
 						--TODO:this is a possible bug,currently no diagonal pipe error check exists
 					else
-						
+						isPiping = false
+						isBadPiping = true
+						selectedTileOverlay.x = currTile.x
+						selectedTileOverlay.y = currTile.y
+						setSequence("badpipe",selectedTileOverlay)
 					end
 				end
-			end
+			elseif isBadPiping == true then
+				--selectedTileOverlay.x = currTile.x
+				--selectedTileOverlay.y = currTile.y
+			end	
 		elseif event.phase == "ended" or event.phase == "cancelled" then
 			selectedTileOverlay.isVisible = false
 			isPiping = false
@@ -298,7 +324,7 @@ local function createTiles( x, y, xMax, yMax, group )
 		prevTile = currTile
 		
 		-- Update the information text to show the tile at the selected position
-		informationText.text = "Tile At Selected Grid Position Is: " .. currTile.id
+		informationText.text = "Selected Grid Type: " .. currTile.grid.type .. " Current Pipe: " .. currentPipe
 		--print(tile)
 	
 		-- Transition the player to the selected grid position
