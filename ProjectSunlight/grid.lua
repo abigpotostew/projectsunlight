@@ -39,9 +39,17 @@ local gridRows = 24 -- number of grid tiles down
 local tileSheetWidth = 256 --width of sheet image
 local tileSheetHeight = 256 --height of sheet image
 
---must initially be set to 1, just cus!
-local pipeCount = 0;
-local currentPipe = -1;
+--must initially be set to 0, just cus!
+local pipeCount = 0
+local currentPipe = -1
+
+--Navigation stuff
+local doubleTapMark = 0
+local IN = 0
+local OUT = 1
+local zoomState = IN
+local zoom_id = nil
+local zoomAmt = 0.5
 
 local isScrolling = false
 local isPiping = false
@@ -265,6 +273,22 @@ local function distance(A,B)
 	return math.sqrt((B.gridX-A.gridX)*(B.gridX-A.gridX)+(B.gridY-A.gridY)*(B.gridY-A.gridY))*tileSize
 end
 
+local function calculateDelta( previousTouches, event )
+    local id,touch = next( previousTouches )
+    if event.id == id then
+        id,touch = next( previousTouches, id )
+        assert( id ~= event.id )
+    end
+ 
+    local dx = touch.x - event.x
+    local dy = touch.y - event.y
+    return dx, dy
+end
+
+local zoomingListener = function(obj)
+	zoom_id = nil
+end
+
 local function createTiles( x, y, xMax, yMax, group )
 	local xStart = x
 	local j = 0
@@ -367,9 +391,49 @@ local function createTiles( x, y, xMax, yMax, group )
 			selectedTileOverlay.isVisible = false
 			isPiping = false
 			isDragging = false
-			isZooming = false
 			isBadPipe = false
 			currentPipe = -1
+			--double tap speed == 500
+			if ( system.getTimer() - doubleTapMark < 500 ) then
+				print("double tap!!")
+				if ( zoom_id ) then
+					transition.cancel(zoom_id.zoom)
+					transition.cancel(zoom_id.position)
+				end
+				if ( zoomState == IN ) then
+					print("zooming OUT!")
+					zoomState = OUT
+					zoom_id = { zoom=transition.to(currTile.group,{xScale = zoomAmt, yScale=zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
+								position=transition.to(currTile.group,{x = 0, y=0, transition=easing.outQuad}) }
+				
+				else
+					zoomState = IN
+					print("currTilex:"..currTile.x.." currTiley:"..currTile.y)
+					local targetx = currTile.x - display.contentWidth/zoomAmt
+					local targety = currTile.x - display.contentHeight/zoomAmt
+					print("width:"..display.contentWidth.." height:"..display.contentHeight)
+					print("TARGET: x:"..targetx.." y:"..targety)
+					if ( targetx > 0 ) then
+						targetx = 0
+					elseif ( targetx < -display.contentWidth/2 ) then
+						targetx = display.contentWidth/2
+					end
+					if ( targety > 0 ) then
+						targety = 0
+					elseif ( targety < -display.contentHeight/2 ) then
+						targety = display.contentHeight/2
+					end
+					--targetx = targetx - display.contentWidth/4
+					--targety = targety - display.contentHeight/4
+					print("zooming IN!\nx:"..targetx.." y:"..targety)
+					zoom_id = { zoom=transition.to(currTile.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
+								position=transition.to(currTile.group,{x=targetx, y=targety, transition=easing.outQuad}) }
+				end
+				doubleTapMark = 0
+			else
+				doubleTapMark = system.getTimer()
+			end
+		
 		end
 		
 		prevTile = currTile
@@ -403,6 +467,7 @@ local function createTiles( x, y, xMax, yMax, group )
                 sequenceId = "grass"
 				sprite:addEventListener( "touch", tileTouchEvent )
             end
+			
 			sprite:setSequence(sequenceId)
 			sprite:play()
 			sprite.id = sequenceId
@@ -422,7 +487,7 @@ end
 
 
 local function createTileGroup( nx, ny )
-	local group = display.newImageGroup( sheet )
+	group = display.newImageGroup( sheet )
 	group.xMin = -(nx-1)*display.contentWidth - halfW
 	group.yMin = -(ny-1)*display.contentHeight - halfH
 	group.xMax = halfW-20

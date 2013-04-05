@@ -11,7 +11,7 @@ local screen = require("screen")
 --create our grid
 local grid = require("grid")
 
-
+--system.activate( "multitouch" )
 
 
 --print FPS info
