@@ -559,6 +559,23 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 
 end)
 
+Grid.dispose = Grid:makeMethod(function(self)
+	self.group:removeSelf()
+	self.group = nil
+	self.informationText = nil
+	self.selectedTileOverlay = nil
+	
+	for i = 1, gridColumns do
+        for j = 1, gridRows do
+            self.grid[i][j].sprite:removeSelf()
+			self.grid[i][j].sprite = nil
+			self.grid[i][j] = nil
+        end
+		self.grid[i] = nil
+    end
+	self.grid = nil
+end)
+
 return Grid
 --end grid stuff
 
