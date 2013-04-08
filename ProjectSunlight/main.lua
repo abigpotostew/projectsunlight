@@ -4,6 +4,10 @@
 --			  Kevin Otoshi
 --			  Stewart Bracken
 
+local util = require("src.util")
+--require("mobdebug").start()
+
+
 -- Disable undeclared globals
 setmetatable(_G, {
 	__newindex = function(_ENV, var, val)
@@ -20,7 +24,6 @@ setmetatable(_G, {
 	end,
 })
 
-local util = require("src.util")
 
 -- Some globals set by various corona modules
 -- Widget adds some globals
@@ -32,12 +35,13 @@ display.setStatusBar(display.HiddenStatusBar) -- hide the status bar
 
 
 --Initialize screen orienation stuff
-local screen = require("screen")
+local screen = require("src.screen")
 
 local gamestate = require "src.gamestate"
 
 --create our grid
-local grid = require("grid")
+local Grid = require("src.grid")
+local grid = Grid:init()
 
 --print FPS info
 local prevTime = system.getTimer()

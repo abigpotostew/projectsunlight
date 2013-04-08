@@ -3,12 +3,40 @@
 --http://developer.coronalabs.com/content/pinch-zoom-gesture
 --Go there for multitouch (pinch, zoom) once ready.
 
-local constants = require("constants")
+local constants = require("src.constants")
 local class = require "src.class"
 
 local Grid = class:makeSubclass("Grid")
 
-Actor:makeInit(function(class, self)
+local tile =
+	{
+	NO_PIPE = -1, --can't build pipes on grid locations here
+	ENERGY = -2,
+	TOWER = -3,
+	EMPTY = 0 --a grid position that has no pipe yet
+}
+-- protect my table now
+local tile = constants.protect_table (tile)
+local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
+local pipe = constants.protect_table(pipe)
+
+local IN = 0
+local OUT = 1
+
+local tileSize = 64
+
+local tileWidth = tileSize --we have square tiles
+local tileHeight = tileSize --we have square tiles
+local gridColumns = 32 -- number of grid tiles across
+local gridRows = 24 -- number of grid tiles down
+local tileSheetWidth = 256 --width of sheet image
+local tileSheetHeight = 256 --height of sheet image
+
+--Special zoom var that should be in grid.class but it's not because it doesn't work for callbacks in transition
+local zoom_id = nil
+
+
+Grid:makeInit(function(class, self)
 	class.super:initWith(self)
 
 	self.typeName = "grid"
@@ -19,18 +47,93 @@ Actor:makeInit(function(class, self)
 	--finger drag tile
 	self.selectedTileOverlay = nil
 	
-	local tile =
-	{
-	NO_PIPE = -1, --can't build pipes on grid locations here
-	ENERGY = -2,
-	TOWER = -3,
-	EMPTY = 0 --a grid position that has no pipe yet
-	}
-	-- protect my table now
-	tile = constants.protect_table (tile)
-	local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
-	pipe = constants.protect_table(pipe)
 	
+	
+    
+    --must initially be set to 0, just cus!
+    self.pipeCount = 0
+    self.currentPipe = -1
+	
+    
+    --Navigation stuff
+    self.doubleTapMark = 0
+    self.zoomState = IN
+    self.zoomAmt = 0.5
+
+    self.isDragging = false
+    self.isPiping = false
+    self.isZooming = false
+    self.isBadPiping = false
+
+    self.grid = {} --a 2D array of pipe informations
+
+    for i = 1, gridColumns do
+        self.grid[i] = {}
+        for j = 1, gridRows do
+            self.grid[i][j] = {}
+            self.grid[i][j].type = tile.EMPTY
+            self.grid[i][j].sprite = 0
+            self.grid[i][j].In = pipe.NONE
+            self.grid[i][j].Out = pipe.NONE
+        end
+    end
+    
+    
+    
+    self.sheetData = { 
+        width=tileWidth,
+        height=tileHeight,
+        numFrames=16,
+        sheetContentWidth=tileSheetWidth,
+        sheetContentHeight=tileSheetHeight
+	}
+    self.sheet = graphics.newImageSheet( "data/tiles.png", self.sheetData ) --load the actual spritesheet
+
+    --each tile can be any one of these tiles
+    --use spite:setSequence("FRAME NAME") to swap out the animation
+    self.sequenceData = {
+        {name="wood", start=1, count = 1,time=0},
+        {name="grass", start=2, count = 1,time=0},
+        {name="horz", start=3, count = 1,time=0},
+        {name="leftdown", start=4, count = 1,time=0},
+        {name="rightdown", start=5, count = 1,time=0},
+        {name="stone", start=6, count = 1,time=0},
+        {name="leftup", start=7, count = 1,time=0},
+        {name="rightup", start=8, count = 1,time=0},
+        {name="vert", start=9, count = 1,time=0},
+        {name="water", start=10, count = 1,time=0},
+        {name="overlay", start=11, count = 1,time=0},
+        {name="leftstop", start=12, count = 1,time=0},
+        {name="rightstop", start=13, count = 1,time=0},
+        {name="upstop", start=14, count = 1,time=0},
+        {name="downstop", start=15, count = 1,time=0},
+        {name="badpipe", start=16, count = 1,time=0}
+    }
+
+    self.w = tileSize
+    self.h = tileSize
+    self.halfW = self.w*0.5
+    self.halfH = self.h*0.5
+
+    --For dragging pipes
+    self.startTile = nil
+    self.prevTile = nil
+    
+    
+    
+    local nx = 2
+    local ny = 2
+    self:createTileGroup( nx, ny )
+
+    --until multitouch zoom is implemented, just zoom out all the way.
+    self.group:scale(1,1)
+
+    self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
+
+    
+    
+    
+    
 	self._timers = {}
 	self._listeners = {}
 
@@ -51,83 +154,8 @@ end)
 --end debug stuff
 
 --Begin grid stuff
-local tileSize = 64
 
-local tileWidth = tileSize --we have square tiles
-local tileHeight = tileSize --we have square tiles
-local gridColumns = 32 -- number of grid tiles across
-local gridRows = 24 -- number of grid tiles down
-local tileSheetWidth = 256 --width of sheet image
-local tileSheetHeight = 256 --height of sheet image
 
---must initially be set to 0, just cus!
-local pipeCount = 0
-local currentPipe = -1
-
---Navigation stuff
-local doubleTapMark = 0
-local IN = 0
-local OUT = 1
-local zoomState = IN
-local zoom_id = nil
-local zoomAmt = 0.5
-
-local isDragging = false
-local isPiping = false
-local isZooming = false
-local isBadPiping = false
-
-local grid = {} --a 2D array of pipe informations
-
-for i = 1, gridColumns do
-	grid[i] = {}
-	for j = 1, gridRows do
-		grid[i][j] = {}
-		grid[i][j].type = tile.EMPTY
-		grid[i][j].sprite = 0
-		grid[i][j].In = pipe.NONE
-		grid[i][j].Out = pipe.NONE
-	end
-end
-
-local sheetData = { 
-	width=tileWidth,
-	height=tileHeight,
-	numFrames=16,
-	sheetContentWidth=tileSheetWidth,
-	sheetContentHeight=tileSheetHeight
-	}
-local sheet = graphics.newImageSheet( "tiles.png", sheetData ) --load the actual spritesheet
-
---each tile can be any one of these tiles
---use spite:setSequence("FRAME NAME") to swap out the animation
-local sequenceData = {
-	{name="wood", start=1, count = 1,time=0},
-	{name="grass", start=2, count = 1,time=0},
-	{name="horz", start=3, count = 1,time=0},
-	{name="leftdown", start=4, count = 1,time=0},
-	{name="rightdown", start=5, count = 1,time=0},
-	{name="stone", start=6, count = 1,time=0},
-	{name="leftup", start=7, count = 1,time=0},
-	{name="rightup", start=8, count = 1,time=0},
-	{name="vert", start=9, count = 1,time=0},
-	{name="water", start=10, count = 1,time=0},
-	{name="overlay", start=11, count = 1,time=0},
-	{name="leftstop", start=12, count = 1,time=0},
-	{name="rightstop", start=13, count = 1,time=0},
-	{name="upstop", start=14, count = 1,time=0},
-	{name="downstop", start=15, count = 1,time=0},
-	{name="badpipe", start=16, count = 1,time=0}
-}
-
-local w = tileSize
-local h = tileSize
-local halfW = w*0.5
-local halfH = h*0.5
-
---For dragging pipes
-local startTile = nil
-local prevTile = nil
 
 --[[local sequences = {}
 	sequences[0] = "wood"
@@ -153,13 +181,13 @@ local function buildTile(_sprite, _id)
 end
 
 -- Return the type from the mirror 2d array grid that has pipe info
-local function getTileType(_sprite)
-	return grid[_sprite.gridX][_sprite.gridY].type
-end
+Grid.getTileType = Grid:makeMethod(function(self, _sprite)
+    return self.grid[_sprite.gridX][_sprite.gridY].type
+end)
 
-local function canStartPipe(currTile)
+Grid.canStartPipe = Grid:makeMethod(function(self, currTile)
 	local out = false
-	local type = getTileType(currTile)
+	local type = self:getTileType(currTile)
 	--local grid = currTile.grid
 	--You can start dragging a pipe when the initial touch begins on an energy source
 	--or on the end of a pipe
@@ -170,16 +198,16 @@ local function canStartPipe(currTile)
 		out = true
 	end
 	return out
-end
+end)
 
-local function canPipeHere(_sprite)
+Grid.canPipeHere = Grid:makeMethod(function(self, _sprite)
 	local out = true
-	local type = getTileType(_sprite)
+	local type = self:getTileType(_sprite)
 	if type == tile.NO_PIPE or type == tile.ENERGY or type == tile.TOWER or type > tile.EMPTY then
 		out = false
 	end
 	return out
-end
+end)
 
 local function getOppositeDirection(direction)
 	if direction == pipe.LEFT then
@@ -228,7 +256,8 @@ local function setSpritePipe(_sprite)
 end
 
 --set the correct pipe in the grid data structure and on the sprite
-local function setPipe(currTile, prevTile)
+
+Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 	local direction = pipe.NONE
 	if currTile.x < prevTile.x then
 		direction = pipe.LEFT
@@ -240,17 +269,17 @@ local function setPipe(currTile, prevTile)
 		direction = pipe.DOWN
 	end
 	
-	prevTile.grid.Out = direction
+	self.prevTile.grid.Out = direction
 	currTile.grid.In = getOppositeDirection(direction)
 	
 	setSpritePipe(currTile)
-	if prevTile.grid.type ~= tile.ENERGY then
+	if self.prevTile.grid.type ~= tile.ENERGY then
 		setSpritePipe(prevTile)
 	end
 	
 	--("currTile: in:"..currTile.In.." out:"..currTile.Out)
 	--print("prevTile: in:"..prevTile.In.." out:"..prevTile.Out)
-end
+end)
 
 local function setSequence(seqName, sprite)
 	sprite:setSequence(seqName)
@@ -294,7 +323,11 @@ local function distance(A,B)
 	return math.sqrt((B.gridX-A.gridX)*(B.gridX-A.gridX)+(B.gridY-A.gridY)*(B.gridY-A.gridY))*tileSize
 end
 
-local function createTiles( x, y, xMax, yMax, group )
+local function zoomingListener(obj)
+	zoom_id = nil
+end
+
+Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	local xStart = x
 	local j = 0
 	
@@ -304,33 +337,33 @@ local function createTiles( x, y, xMax, yMax, group )
 		
 		if event.phase == "began" then
 			--print(getTileType(currTile))
-			local tileType = getTileType(currTile)
+			local tileType = self:getTileType(currTile)
 			if tileType == tile.EMPTY then
-				isDragging = true
+				self.isDragging = true
 				currTile.group.xStart = currTile.group.x
 				currTile.group.yStart = currTile.group.y
 				currTile.group.xBegan = event.x
 				currTile.group.yBegan = event.y
 				print("start scrolling")
-			elseif canStartPipe(currTile) == true then
-				isPiping = true
-				startTile = currTile
-				prevTile = currTile
-				selectedTileOverlay.isVisible = true
-				selectedTileOverlay.x = currTile.x
-				selectedTileOverlay.y = currTile.y
-				setSequence("overlay",selectedTileOverlay)
+			elseif self:canStartPipe(currTile) == true then
+				self.isPiping = true
+				self.startTile = currTile
+				self.prevTile = currTile
+				self.selectedTileOverlay.isVisible = true
+				self.selectedTileOverlay.x = currTile.x
+				self.selectedTileOverlay.y = currTile.y
+				setSequence("overlay",self.selectedTileOverlay)
 				print("start piping WOO!")
 			else
-				isBadPiping = true
-				selectedTileOverlay.isVisible = true
-				setSequence("badpipe",selectedTileOverlay)
-				selectedTileOverlay.x = currTile.x
-				selectedTileOverlay.y = currTile.y
+				self.isBadPiping = true
+				self.selectedTileOverlay.isVisible = true
+				setSequence("badpipe",self.selectedTileOverlay)
+				self.selectedTileOverlay.x = currTile.x
+				self.selectedTileOverlay.y = currTile.y
 				print("bad pipe!")
 			end
 		elseif event.phase == "moved" then
-			if isDragging == true then
+			if self.isDragging == true then
 				local dx = event.x - currTile.group.xBegan
 				local dy = event.y - currTile.group.yBegan
 				local x = dx + currTile.group.xStart
@@ -341,82 +374,68 @@ local function createTiles( x, y, xMax, yMax, group )
 				if ( y > currTile.group.yMax ) then y = currTile.group.yMax end
 				currTile.group.x = x
 				currTile.group.y = y
-			elseif isPiping == true then
-				if currTile ~= prevTile then
-					
-					-- if distance(currTile,prevTile) > tileSize+1 then
--- 						print("start:"..currTile.gridX..","..currTile.gridY)
--- 						print("end:"..prevTile.gridX..","..prevTile.gridY)
--- 						local path = bresenhams(prevTile,currTile)
--- 						for i=1, #path do
--- 							local point = path[i]
--- 							print("x: "..point.x..", y:"..point.y)
--- 						end
--- 					end 
-					local path = bresenhams(prevTile,currTile)
-					for i=1, #path do
-						local point = path[i]
-						--print("x: "..point.x..", y:"..point.y)
-					end
+			elseif self.isPiping == true then
+				if currTile ~= self.prevTile then
+					local path = bresenhams(self.prevTile,currTile)
 					
 					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
 					--if freshPipe then print("fresh!") end
-					local canPipe = (canPipeHere(currTile))
+					local canPipe = (self:canPipeHere(currTile))
 					if canPipe then print("can pipe!") end
-					if getTileType(prevTile) == tile.ENERGY and getTileType(currTile) == tile.EMPTY then
-						pipeCount = pipeCount + 1
+					if self:getTileType(self.prevTile) == tile.ENERGY and self:getTileType(currTile) == tile.EMPTY then
+						self.pipeCount = self.pipeCount + 1
 					end
 					--freshPipe == true or
 					if canPipe == true then
-						if currentPipe < 0 then 
-							if prevTile.grid.type <= 0 then
-								currentPipe = pipeCount
+						if self.currentPipe < 0 then 
+							if self.prevTile.grid.type <= 0 then
+								self.currentPipe = self.pipeCount
 							else
-								currentPipe = prevTile.grid.type
+								self.currentPipe = self.prevTile.grid.type
 							end
 						end
-						currTile.grid.type = currentPipe
-						selectedTileOverlay.x = currTile.x
-						selectedTileOverlay.y = currTile.y
-						setPipe(currTile, prevTile)
+						currTile.grid.type = self.currentPipe
+						self.selectedTileOverlay.x = currTile.x
+						self.selectedTileOverlay.y = currTile.y
+						self:setPipe(currTile, self.prevTile)
 						--TODO:this is a possible bug,currently no diagonal pipe error check exists
 					else
-						isPiping = false
-						isBadPiping = true
-						selectedTileOverlay.x = currTile.x
-						selectedTileOverlay.y = currTile.y
-						setSequence("badpipe",selectedTileOverlay)
+						self.isPiping = false
+						self.isBadPiping = true
+						self.selectedTileOverlay.x = currTile.x
+						self.selectedTileOverlay.y = currTile.y
+						setSequence("badpipe",self.selectedTileOverlay)
 					end
 				end
-			elseif isBadPiping == true then
+			elseif self.isBadPiping == true then
 				--selectedTileOverlay.x = currTile.x
 				--selectedTileOverlay.y = currTile.y
 			end	
 		elseif event.phase == "ended" or event.phase == "cancelled" then
-			selectedTileOverlay.isVisible = false
-			isPiping = false
-			isDragging = false
-			isZooming = false
-			isBadPiping = false
-			currentPipe = -1
+			self.selectedTileOverlay.isVisible = false
+			self.isPiping = false
+			self.isDragging = false
+			self.isZooming = false
+			self.isBadPiping = false
+			self.currentPipe = -1
 			--double tap speed == 500
-			if ( system.getTimer() - doubleTapMark < 500 ) then
+			if ( system.getTimer() - self.doubleTapMark < 500 ) then
 				print("double tap!!")
 				if ( zoom_id ) then
 					transition.cancel(zoom_id.zoom)
 					transition.cancel(zoom_id.position)
 				end
-				if ( zoomState == IN ) then
+				if ( self.zoomState == IN ) then
 					print("zooming OUT!")
-					zoomState = OUT
-					zoom_id = { zoom=transition.to(currTile.group,{xScale = zoomAmt, yScale=zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
+					self.zoomState = OUT
+					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
 								position=transition.to(currTile.group,{x = 0, y=0, transition=easing.outQuad}) }
 				
 				else
-					zoomState = IN
+					self.zoomState = IN
 					print("currTilex:"..currTile.x.." currTiley:"..currTile.y)
-					local targetx = currTile.x - display.contentWidth/zoomAmt
-					local targety = currTile.x - display.contentHeight/zoomAmt
+					local targetx = currTile.x - display.contentWidth/self.zoomAmt
+					local targety = currTile.x - display.contentHeight/self.zoomAmt
 					print("width:"..display.contentWidth.." height:"..display.contentHeight)
 					print("TARGET: x:"..targetx.." y:"..targety)
 					if ( targetx > 0 ) then
@@ -435,17 +454,17 @@ local function createTiles( x, y, xMax, yMax, group )
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
 								position=transition.to(currTile.group,{x=targetx, y=targety, transition=easing.outQuad}) }
 				end
-				doubleTapMark = 0
+				self.doubleTapMark = 0
 			else
-				doubleTapMark = system.getTimer()
+				self.doubleTapMark = system.getTimer()
 			end
 		
 		end
 		
-		prevTile = currTile
+		self.prevTile = currTile
 		
 		-- Update the information text to show the tile at the selected position
-		informationText.text = "Selected Grid Type: " .. currTile.grid.type .. " Current Pipe: " .. currentPipe
+		self.informationText.text = "Selected Grid Type: " .. currTile.grid.type .. " Current Pipe: " .. self.currentPipe
 		--print(tile)
 	
 		-- Transition the player to the selected grid position
@@ -457,17 +476,17 @@ local function createTiles( x, y, xMax, yMax, group )
 	--create grid sprites!!
 	for X = 1,gridColumns do
 		for Y = 1, gridRows do
-			local sprite = display.newSprite(sheet, sequenceData )
-			group:insert(sprite)
+			local sprite = display.newSprite(self.sheet, self.sequenceData )
+			self.group:insert(sprite)
 			sprite:translate(X*tileWidth,Y*tileHeight)
 			local sequenceId
 			if ( X == 2 and Y == 2 ) then
 			    sequenceId = "water"
-				grid[X][Y].type = tile.ENERGY
+				self.grid[X][Y].type = tile.ENERGY
 				sprite:addEventListener( "touch", tileTouchEvent )
 			elseif (X == 20 and Y == 10) then
 				sequenceId = "stone"
-				grid[X][Y].type = tile.TOWER
+				self.grid[X][Y].type = tile.TOWER
 				sprite:addEventListener( "touch", tileTouchEvent )
 			else
                 sequenceId = "grass"
@@ -482,22 +501,21 @@ local function createTiles( x, y, xMax, yMax, group )
 			sprite.In = pipe.NONE
 			sprite.Out = pipe.NONE
 			sprite.group = group
-			grid[X][Y].sprite = sprite
-			sprite.grid = grid[X][Y]
+			self.grid[X][Y].sprite = sprite
+			sprite.grid = self.grid[X][Y]
 		end
 	end
-end
+end)
 
 
-
-local function createTileGroup( nx, ny )
-	group = display.newImageGroup( sheet )
-	group.xMin = -(nx-1)*display.contentWidth - halfW
-	group.yMin = -(ny-1)*display.contentHeight - halfH
-	group.xMax = halfW-20
-	group.yMax = halfH-20
+Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
+	self.group = display.newImageGroup( self.sheet )
+	self.group.xMin = -(nx-1)*display.contentWidth - self.halfW
+	self.group.yMin = -(ny-1)*display.contentHeight - self.halfH
+	self.group.xMax = self.halfW-20
+	self.group.yMax = self.halfH-20
 	
-	function group:touch( event )
+	function self.group:touch( event )
 		if ( "began" == event.phase ) then
 			self.xStart = self.x
 			self.yStart = self.y
@@ -522,34 +540,25 @@ local function createTileGroup( nx, ny )
 	--group:addEventListener( "touch", group )
 	
 	
-	local x = halfW
-	local y = halfH
+	local x = self.halfW
+	local y = self.halfH
 	
 	local xMax = nx * display.contentWidth
 	local yMax = ny * display.contentHeight
 	
-	createTiles( x, y, xMax, yMax, group )
+	self:createTiles( x, y, xMax, yMax, self.group )
 	
 	--This comes after creating tiles so it shows up on top of the grid
 	--This guy shows up wherever the players finger is
-	selectedTileOverlay = display.newSprite(sheet, sequenceData )
-	selectedTileOverlay:setSequence("overlay")
-	selectedTileOverlay:play()
-	selectedTileOverlay.alpha = .5
-	selectedTileOverlay.isVisible = false
-	group:insert(selectedTileOverlay)
+	self.selectedTileOverlay = display.newSprite(self.sheet, self.sequenceData )
+	self.selectedTileOverlay:setSequence("overlay")
+	self.selectedTileOverlay:play()
+	self.selectedTileOverlay.alpha = .5
+	self.selectedTileOverlay.isVisible = false
+	self.group:insert(self.selectedTileOverlay)
 
-	return group
-end
+end)
 
-local nx = 2
-local ny = 2
-local group = createTileGroup( nx, ny )
-
---until multitouch zoom is implemented, just zoom out all the way.
-group:scale(1,1)
-
-informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
-
+return Grid
 --end grid stuff
 
