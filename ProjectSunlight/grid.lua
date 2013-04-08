@@ -3,28 +3,49 @@
 --http://developer.coronalabs.com/content/pinch-zoom-gesture
 --Go there for multitouch (pinch, zoom) once ready.
 
-require("tile")
-require("constants")
+local constants = require("constants")
+local class = require "src.class"
 
-tile =
-  {
-  NO_PIPE = -1, --can't build pipes on grid locations here
-  ENERGY = -2,
-  TOWER = -3,
-  EMPTY = 0 --a grid position that has no pipe yet
-  }
+local Grid = class:makeSubclass("Grid")
 
--- protect my table now
-tile = protect_table (tile)
+Actor:makeInit(function(class, self)
+	class.super:initWith(self)
 
-pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
-pipe = protect_table(pipe)
+	self.typeName = "grid"
 
--- debug stuff
-local informationText = nil
+	-- debug stuff
+	self.informationText = nil
+	
+	--finger drag tile
+	self.selectedTileOverlay = nil
+	
+	local tile =
+	{
+	NO_PIPE = -1, --can't build pipes on grid locations here
+	ENERGY = -2,
+	TOWER = -3,
+	EMPTY = 0 --a grid position that has no pipe yet
+	}
+	-- protect my table now
+	tile = constants.protect_table (tile)
+	local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
+	pipe = constants.protect_table(pipe)
+	
+	self._timers = {}
+	self._listeners = {}
 
---finger drag tile
-local selectedTileOverlay = nil
+	return self
+end)
+
+
+
+
+
+
+
+
+
+
 --local tileProperties = nil
 
 --end debug stuff
@@ -43,10 +64,10 @@ local tileSheetHeight = 256 --height of sheet image
 local pipeCount = 0;
 local currentPipe = -1;
 
-local isScrolling = false
+local isDragging = false
 local isPiping = false
 local isZooming = false
-local isBadPipe = false
+local isBadPiping = false
 
 local grid = {} --a 2D array of pipe informations
 
@@ -368,7 +389,7 @@ local function createTiles( x, y, xMax, yMax, group )
 			isPiping = false
 			isDragging = false
 			isZooming = false
-			isBadPipe = false
+			isBadPiping = false
 			currentPipe = -1
 		end
 		
@@ -415,8 +436,6 @@ local function createTiles( x, y, xMax, yMax, group )
 			sprite.grid = grid[X][Y]
 		end
 	end
-	
-	
 end
 
 
