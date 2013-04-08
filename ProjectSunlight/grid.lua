@@ -3,28 +3,49 @@
 --http://developer.coronalabs.com/content/pinch-zoom-gesture
 --Go there for multitouch (pinch, zoom) once ready.
 
-require("tile")
-require("constants")
+local constants = require("constants")
+local class = require "src.class"
 
-tile =
-  {
-  NO_PIPE = -1, --can't build pipes on grid locations here
-  ENERGY = -2,
-  TOWER = -3,
-  EMPTY = 0 --a grid position that has no pipe yet
-  }
+local Grid = class:makeSubclass("Grid")
 
--- protect my table now
-tile = protect_table (tile)
+Actor:makeInit(function(class, self)
+	class.super:initWith(self)
 
-pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
-pipe = protect_table(pipe)
+	self.typeName = "grid"
 
--- debug stuff
-local informationText = nil
+	-- debug stuff
+	self.informationText = nil
+	
+	--finger drag tile
+	self.selectedTileOverlay = nil
+	
+	local tile =
+	{
+	NO_PIPE = -1, --can't build pipes on grid locations here
+	ENERGY = -2,
+	TOWER = -3,
+	EMPTY = 0 --a grid position that has no pipe yet
+	}
+	-- protect my table now
+	tile = constants.protect_table (tile)
+	local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
+	pipe = constants.protect_table(pipe)
+	
+	self._timers = {}
+	self._listeners = {}
 
---finger drag tile
-local selectedTileOverlay = nil
+	return self
+end)
+
+
+
+
+
+
+
+
+
+
 --local tileProperties = nil
 
 --end debug stuff
@@ -51,10 +72,10 @@ local zoomState = IN
 local zoom_id = nil
 local zoomAmt = 0.5
 
-local isScrolling = false
+local isDragging = false
 local isPiping = false
 local isZooming = false
-local isBadPipe = false
+local isBadPiping = false
 
 local grid = {} --a 2D array of pipe informations
 
@@ -273,22 +294,6 @@ local function distance(A,B)
 	return math.sqrt((B.gridX-A.gridX)*(B.gridX-A.gridX)+(B.gridY-A.gridY)*(B.gridY-A.gridY))*tileSize
 end
 
-local function calculateDelta( previousTouches, event )
-    local id,touch = next( previousTouches )
-    if event.id == id then
-        id,touch = next( previousTouches, id )
-        assert( id ~= event.id )
-    end
- 
-    local dx = touch.x - event.x
-    local dy = touch.y - event.y
-    return dx, dy
-end
-
-local zoomingListener = function(obj)
-	zoom_id = nil
-end
-
 local function createTiles( x, y, xMax, yMax, group )
 	local xStart = x
 	local j = 0
@@ -391,7 +396,8 @@ local function createTiles( x, y, xMax, yMax, group )
 			selectedTileOverlay.isVisible = false
 			isPiping = false
 			isDragging = false
-			isBadPipe = false
+			isZooming = false
+			isBadPiping = false
 			currentPipe = -1
 			--double tap speed == 500
 			if ( system.getTimer() - doubleTapMark < 500 ) then
@@ -480,8 +486,6 @@ local function createTiles( x, y, xMax, yMax, group )
 			sprite.grid = grid[X][Y]
 		end
 	end
-	
-	
 end
 
 

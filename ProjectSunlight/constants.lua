@@ -1,4 +1,6 @@
-function protect_table (tbl)
+
+
+local function protect_table (tbl)
   return setmetatable ({}, 
     {
     __index = tbl,  -- read access gets original table item
@@ -10,6 +12,9 @@ function protect_table (tbl)
 
 end -- function protect_table
 
+local create = { protect_table = protect_table }
+
+return create
 
 -------------------------- test -----------------
 

@@ -5,7 +5,7 @@ local mainOr = "landscapeRight"
 local altOr = "landscapeLeft"
 local stage = display.getCurrentStage( )
 stage:setReferencePoint(display.CenterReferencePoint)
-isRotated = false
+local isRotated = false
 local rotatefilter --function reserve
 local rotatestart --function reserve
 local rotatecomplete --function reserve
