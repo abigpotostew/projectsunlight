@@ -47,19 +47,16 @@ Grid:makeInit(function(class, self)
 	--finger drag tile
 	self.selectedTileOverlay = nil
 	
-	
-	
-    
     --must initially be set to 0, just cus!
     self.pipeCount = 0
     self.currentPipe = -1
-	
     
     --Navigation stuff
     self.doubleTapMark = 0
     self.zoomState = IN
     self.zoomAmt = 0.5
 
+	--states for touch stuff
     self.isDragging = false
     self.isPiping = false
     self.isZooming = false
@@ -67,6 +64,7 @@ Grid:makeInit(function(class, self)
 
     self.grid = {} --a 2D array of pipe informations
 
+	--Initialize the grid
     for i = 1, gridColumns do
         self.grid[i] = {}
         for j = 1, gridRows do
@@ -77,8 +75,6 @@ Grid:makeInit(function(class, self)
             self.grid[i][j].Out = pipe.NONE
         end
     end
-    
-    
     
     self.sheetData = { 
         width=tileWidth,
@@ -430,27 +426,27 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					self.zoomState = OUT
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
 								position=transition.to(currTile.group,{x = 0, y=0, transition=easing.outQuad}) }
-				
 				else
 					self.zoomState = IN
+					--print("currTilex:"..currTile.x.." currTiley:"..currTile.y)
+					local targetx = -currTile.x + display.contentWidth/4
+					local targety = -currTile.y + display.contentHeight/4
+					--print("width:"..display.contentWidth.." height:"..display.contentHeight)
 					print("currTilex:"..currTile.x.." currTiley:"..currTile.y)
-					local targetx = currTile.x - display.contentWidth/self.zoomAmt
-					local targety = currTile.x - display.contentHeight/self.zoomAmt
-					print("width:"..display.contentWidth.." height:"..display.contentHeight)
-					print("TARGET: x:"..targetx.." y:"..targety)
 					if ( targetx > 0 ) then
 						targetx = 0
-					elseif ( targetx < -display.contentWidth/2 ) then
-						targetx = display.contentWidth/2
+					elseif ( targetx < -display.contentWidth ) then
+						targetx = -display.contentWidth-tileSize
 					end
 					if ( targety > 0 ) then
 						targety = 0
-					elseif ( targety < -display.contentHeight/2 ) then
-						targety = display.contentHeight/2
+					elseif ( targety < -display.contentHeight ) then
+						targety = -display.contentHeight-tileSize
 					end
+					print("TARGET: x:"..targetx.." y:"..targety)
 					--targetx = targetx - display.contentWidth/4
 					--targety = targety - display.contentHeight/4
-					print("zooming IN!\nx:"..targetx.." y:"..targety)
+					print("zooming IN!x:"..targetx.." y:"..targety)
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
 								position=transition.to(currTile.group,{x=targetx, y=targety, transition=easing.outQuad}) }
 				end
