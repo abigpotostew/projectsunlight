@@ -20,6 +20,7 @@ ActorType:makeInit(function(class, self)
 		bodyType = "dynamic",
 		category = "",
 		collidables = {},
+		gravity = 0,
 	 }
 	 util.errorOnUndefinedProperty(self.physics)
 

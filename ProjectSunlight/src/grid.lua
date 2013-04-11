@@ -432,21 +432,21 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					local targetx = -currTile.x + display.contentWidth/4
 					local targety = -currTile.y + display.contentHeight/4
 					--print("width:"..display.contentWidth.." height:"..display.contentHeight)
-					print("currTilex:"..currTile.x.." currTiley:"..currTile.y)
+					--print("Before Scaling!x:"..targetx.." y:"..targety)
 					if ( targetx > 0 ) then
 						targetx = 0
-					elseif ( targetx < -display.contentWidth ) then
-						targetx = -display.contentWidth-tileSize
+					elseif ( targetx < -display.contentWidth/2 ) then
+						targetx = -display.contentWidth/2
 					end
 					if ( targety > 0 ) then
 						targety = 0
-					elseif ( targety < -display.contentHeight ) then
-						targety = -display.contentHeight-tileSize
+					elseif ( targety < -display.contentHeight/2 ) then
+						targety = -display.contentHeight/2
 					end
 					print("TARGET: x:"..targetx.." y:"..targety)
 					--targetx = targetx - display.contentWidth/4
 					--targety = targety - display.contentHeight/4
-					print("zooming IN!x:"..targetx.." y:"..targety)
+					--print("zooming IN!x:"..targetx.." y:"..targety)
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
 								position=transition.to(currTile.group,{x=targetx, y=targety, transition=easing.outQuad}) }
 				end
