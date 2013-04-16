@@ -7,6 +7,7 @@
 local util = require("src.util")
 --require("mobdebug").start()
 
+local debugArtSheet
 
 -- Disable undeclared globals
 setmetatable(_G, {
