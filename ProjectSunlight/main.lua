@@ -5,7 +5,7 @@
 --			  Stewart Bracken
 
 local util = require("src.util")
---require("mobdebug").start()
+require("mobdebug").start()
 
 local physics = require("physics")
 physics.start()

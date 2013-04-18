@@ -3,33 +3,15 @@
 --http://developer.coronalabs.com/content/pinch-zoom-gesture
 --Go there for multitouch (pinch, zoom) once ready.
 
-local constants = require("src.constants")
 local class = require "src.class"
-
 local actor = require("src.actors.actor")
-
 local Pollution = require "src.actors.pollution"
 local pollutionType = require "src.actors.pollutionType"
+local Tile = require "src.tile"
 
 local Grid = class:makeSubclass("Grid")
 
-local tile =
-	{
-	NO_PIPE = -1, --can't build pipes on grid locations here
-	ENERGY = -2,
-	TOWER = -3,
-	EMPTY = 0 --a grid position that has no pipe yet
-}
--- protect my table now
-local tile = constants.protect_table (tile)
-local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
-local pipe = constants.protect_table(pipe)
-
-local IN = 0
-local OUT = 1
-
 local tileSize = 64
-
 local tileWidth = tileSize --we have square tiles
 local tileHeight = tileSize --we have square tiles
 local gridColumns = 32 -- number of grid tiles across
@@ -73,11 +55,7 @@ Grid:makeInit(function(class, self)
     for i = 1, gridColumns do
         self.grid[i] = {}
         for j = 1, gridRows do
-            self.grid[i][j] = {}
-            self.grid[i][j].type = tile.EMPTY
-            self.grid[i][j].sprite = 0
-            self.grid[i][j].In = pipe.NONE
-            self.grid[i][j].Out = pipe.NONE
+            self.grid[i][j] = Tile:init()
         end
     end
     
@@ -187,27 +165,11 @@ Grid.getTileType = Grid:makeMethod(function(self, _sprite)
 end)
 
 Grid.canStartPipe = Grid:makeMethod(function(self, currTile)
-	local out = false
-	local type = self:getTileType(currTile)
-	--local grid = currTile.grid
-	--You can start dragging a pipe when the initial touch begins on an energy source
-	--or on the end of a pipe
-	if type == tile.ENERGY or 
-		( type > tile.EMPTY and 
-		  currTile.grid.Out == pipe.NONE 
-		  and currTile.grid.In > pipe.NONE) then
-		out = true
-	end
-	return out
+	return currTile.canStartPipe()
 end)
 
-Grid.canPipeHere = Grid:makeMethod(function(self, _sprite)
-	local out = true
-	local type = self:getTileType(_sprite)
-	if type == tile.NO_PIPE or type == tile.ENERGY or type == tile.TOWER or type > tile.EMPTY then
-		out = false
-	end
-	return out
+Grid.canPipeHere = Grid:makeMethod(function(self, tile)
+	return tile.canPipeHere()
 end)
 
 local function getOppositeDirection(direction)
@@ -223,37 +185,40 @@ local function getOppositeDirection(direction)
 end
 
 local function setSpritePipe(_sprite)
-	local tile = _sprite.grid
+	local tile = _sprite.tile
+    local id = nil
 	if (tile.In == pipe.LEFT and tile.Out == pipe.UP) or
 	   (tile.In == pipe.UP and tile.Out == pipe.LEFT) then
-		_sprite:setSequence("leftup",_sprite)
+		id = "leftup"
 	elseif (tile.In == pipe.UP and tile.Out == pipe.RIGHT) or
 		   (tile.In == pipe.RIGHT and tile.Out == pipe.UP) then
-		_sprite:setSequence("rightup",_sprite)
+		id = "rightup"
 	elseif (tile.In == pipe.LEFT and tile.Out == pipe.DOWN) or
 		   (tile.In == pipe.DOWN and tile.Out == pipe.LEFT) then
-		_sprite:setSequence("leftdown",_sprite)
+		id = "leftdown"
 	elseif (tile.In == pipe.RIGHT and tile.Out == pipe.DOWN) or
 		   (tile.In == pipe.DOWN and tile.Out == pipe.RIGHT) then
-		_sprite:setSequence("rightdown",_sprite)
+		id = "rightdown"
 	elseif (tile.In == pipe.LEFT and tile.Out == pipe.RIGHT) or
 		   (tile.In == pipe.RIGHT and tile.Out == pipe.LEFT) then
-		_sprite:setSequence("horz",_sprite)
+		id = "horz"
 	elseif (tile.In == pipe.UP and tile.Out == pipe.DOWN) or
 		   (tile.In == pipe.DOWN and tile.Out == pipe.UP) then
-		_sprite:setSequence("vert",_sprite)
+		id = "vert"
 	elseif tile.Out == pipe.UP or tile.In == pipe.UP then
-		_sprite:setSequence("upstop",_sprite)
+		id = "upstop"
 	elseif tile.Out == pipe.DOWN or tile.In == pipe.DOWN then
-		_sprite:setSequence("downstop",_sprite)
+		id = "downstop"
 	elseif tile.Out == pipe.RIGHT or tile.In == pipe.RIGHT then
-		_sprite:setSequence("rightstop",_sprite)
+		id = "rightstop"
 	elseif tile.Out == pipe.LEFT or tile.In == pipe.LEFT then
-		_sprite:setSequence("leftstop",_sprite)
+		id = "leftstop"
 	else
-		_sprite:setSequence("grass",_sprite)
+		id = "grass"
 	end
-
+    self.currentFrame = debugTexturesSheetInfo:getFrameIndex(id)
+    --_sprite:setSequence(id, _sprite)
+    
 end
 
 --set the correct pipe in the grid data structure and on the sprite
@@ -270,11 +235,11 @@ Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 		direction = pipe.DOWN
 	end
 	
-	self.prevTile.grid.Out = direction
-	currTile.grid.In = getOppositeDirection(direction)
+	self.prevTile.tile.Out = direction
+	currTile.tile.In = getOppositeDirection(direction)
 	
 	setSpritePipe(currTile)
-	if self.prevTile.grid.type ~= tile.ENERGY then
+	if self.prevTile.tile.type ~= tile.ENERGY then
 		setSpritePipe(prevTile)
 	end
 	
@@ -283,8 +248,9 @@ Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 end)
 
 local function setSequence(seqName, sprite)
-	sprite:setSequence(seqName)
-	sprite:play()
+	--sprite:setSequence(seqName)
+    sprite.currentFrame = debugTexturesSheetInfo:getFrameIndex(seqName)
+	--sprite:play()
 end
 
 --Bresenhams line algorithm
@@ -320,8 +286,9 @@ local function bresenhams(start,dest)
 	return path
 end
 
-local function distance(A,B)
-	return math.sqrt((B.gridX-A.gridX)*(B.gridX-A.gridX)+(B.gridY-A.gridY)*(B.gridY-A.gridY))*tileSize
+local function distance(tileA,tileB)
+	return math.sqrt((tileB.gridX-tileA.gridX)*(tileB.gridX-tileA.gridX)
+        + (tileB.gridY-tileA.gridY)*(tileB.gridY-tileA.gridY)) * tileSize --mult by pixels per tile
 end
 
 local function zoomingListener(obj)
@@ -334,26 +301,26 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	
 	--Event listener for each tile!
 	local function tileTouchEvent( event )
-		local currTile = event.target
+		local currTile = event.target.tile
 		
 		if event.phase == "began" then
 			--print(getTileType(currTile))
-			local tileType = self:getTileType(currTile)
-			if tileType == tile.EMPTY then
+			local tileType = currTile.type
+			if currTile:isEmpty() then
 				self.isDragging = true
-				currTile.group.xStart = currTile.group.x
-				currTile.group.yStart = currTile.group.y
-				currTile.group.xBegan = event.x
-				currTile.group.yBegan = event.y
+				self.group.xStart = currTile.group.x
+				self.group.yStart = currTile.group.y
+				self.group.xBegan = event.x
+				self.group.yBegan = event.y
 				print("start scrolling")
-			elseif self:canStartPipe(currTile) == true then
+			elseif currTile:canStartPipe() == true then
 				self.isPiping = true
 				self.startTile = currTile
 				self.prevTile = currTile
+                setSequence("overlay",self.selectedTileOverlay)
 				self.selectedTileOverlay.isVisible = true
 				self.selectedTileOverlay.x = currTile.x
 				self.selectedTileOverlay.y = currTile.y
-				setSequence("overlay",self.selectedTileOverlay)
 				print("start piping WOO!")
 			else
 				self.isBadPiping = true
@@ -365,16 +332,16 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			end
 		elseif event.phase == "moved" then
 			if self.isDragging == true then
-				local dx = event.x - currTile.group.xBegan
-				local dy = event.y - currTile.group.yBegan
-				local x = dx + currTile.group.xStart
-				local y = dy + currTile.group.yStart
-				if ( x < currTile.group.xMin ) then x = currTile.group.xMin end
-				if ( x > currTile.group.xMax ) then x = currTile.group.xMax end
-				if ( y < currTile.group.yMin ) then y = currTile.group.yMin end
-				if ( y > currTile.group.yMax ) then y = currTile.group.yMax end
-				currTile.group.x = x
-				currTile.group.y = y
+				local dx = event.x - self.group.xBegan
+				local dy = event.y - self.group.yBegan
+				local x = dx + self.group.xStart
+				local y = dy + self.group.yStart
+				if ( x < self.group.xMin ) then x = self.group.xMin end
+				if ( x > self.group.xMax ) then x = self.group.xMax end
+				if ( y < self.group.yMin ) then y = self.group.yMin end
+				if ( y > self.group.yMax ) then y = self.group.yMax end
+				self.group.x = x
+				self.group.y = y
 			elseif self.isPiping == true then
 				if currTile ~= self.prevTile then
 					local path = bresenhams(self.prevTile,currTile)
@@ -389,13 +356,13 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					--freshPipe == true or
 					if canPipe == true then
 						if self.currentPipe < 0 then 
-							if self.prevTile.grid.type <= 0 then
+							if self.prevTile.tile.type <= 0 then
 								self.currentPipe = self.pipeCount
 							else
-								self.currentPipe = self.prevTile.grid.type
+								self.currentPipe = self.prevTile.tile.type
 							end
 						end
-						currTile.grid.type = self.currentPipe
+						currTile.tile.type = self.currentPipe
 						self.selectedTileOverlay.x = currTile.x
 						self.selectedTileOverlay.y = currTile.y
 						self:setPipe(currTile, self.prevTile)
@@ -452,8 +419,8 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					--targetx = targetx - display.contentWidth/4
 					--targety = targety - display.contentHeight/4
 					--print("zooming IN!x:"..targetx.." y:"..targety)
-					zoom_id = { zoom=transition.to(currTile.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
-								position=transition.to(currTile.group,{x=targetx, y=targety, transition=easing.outQuad}) }
+					zoom_id = { zoom=transition.to(self.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
+								position=transition.to(self.group,{x=targetx, y=targety, transition=easing.outQuad}) }
 				end
 				self.doubleTapMark = 0
 			else
@@ -465,7 +432,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 		self.prevTile = currTile
 		
 		-- Update the information text to show the tile at the selected position
-		--self.informationText.text = "Selected Grid Type: " .. currTile.grid.type .. " Current Pipe: " .. self.currentPipe
+		--self.informationText.text = "Selected Grid Type: " .. currTile.tile.type .. " Current Pipe: " .. self.currentPipe
 		--print(tile)
 	
 		-- Transition the player to the selected grid position
@@ -474,19 +441,20 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 		return true --important
 	end
 	
-	--create grid sprites!!
+	
+    --create grid sprites!!
 	for X = 1,gridColumns do
 		for Y = 1, gridRows do
 			local sprite = display.newImage(debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex("grass"))
 			--local sprite = display.newSprite(self.sheet, self.sequenceData )--OLD
 			
-			local sequenceId
+			--[[local sequenceId
 			if ( X == 2 and Y == 2 ) then
-			    sequenceId = "water"
+			    sequenceId = "energy"
 				self.grid[X][Y].type = tile.ENERGY
 				--sprite:addEventListener( "touch", tileTouchEvent )
 			elseif (X == 20 and Y == 10) then
-				sequenceId = "stone"
+				sequenceId = "tower"
 				self.grid[X][Y].type = tile.TOWER
 				--sprite:addEventListener( "touch", tileTouchEvent )
 			end
@@ -494,7 +462,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			if sequenceId then
 				sprite:removeSelf()
 				sprite = display.newImage(debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex(sequenceId))
-			end
+			end]]--
 			
 			self.group:insert(sprite)
 			sprite:translate(X*tileWidth,Y*tileHeight)
@@ -502,16 +470,22 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			
 			--sprite:setSequence(sequenceId)
 			--sprite:play()
-			sprite.id = sequenceId
-			sprite.gridX = X
-			sprite.gridY = Y
-			sprite.In = pipe.NONE
-			sprite.Out = pipe.NONE
-			sprite.group = group
-			self.grid[X][Y].sprite = sprite
-			sprite.grid = self.grid[X][Y]
+			--sprite.id = sequenceId
+			--sprite.gridX = X
+			--sprite.gridY = Y
+			--sprite.In = pipe.NONE
+			--sprite.Out = pipe.NONE
+			sprite.group = self.group
+            
+			self.grid[X][Y].terrain = sprite
+            self.grid[X][Y].gridX = X
+            self.grid[X][Y].gridY = Y
+			sprite.tile = self.grid[X][Y]
 		end
 	end
+    
+    --CREATE SOME TOWERS & ENERGY SOURCES HERE
+    
 end)
 
 
@@ -578,8 +552,8 @@ Grid.dispose = Grid:makeMethod(function(self)
 	
 	for i = 1, gridColumns do
         for j = 1, gridRows do
-            self.grid[i][j].sprite:removeSelf()
-			self.grid[i][j].sprite = nil
+            self.grid[i][j].terrain:removeSelf()
+			self.grid[i][j].terrain = nil
 			self.grid[i][j] = nil
         end
 		self.grid[i] = nil
