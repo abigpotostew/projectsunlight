@@ -20,8 +20,8 @@ ActorType:makeInit(function(class, self)
 
 	self.physics = {
 		mass = 1,
-		friction = 0.3,
-		bounce = 0.2,
+		friction = 0,
+		bounce = 0,
 		bodyType = "kinematic",
 		category = "",
 		collidables = {},

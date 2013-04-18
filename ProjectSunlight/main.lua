@@ -7,10 +7,16 @@
 local util = require("src.util")
 --require("mobdebug").start()
 
-local debugArtSheet
+local physics = require("physics")
+physics.start()
+physics.setGravity(0.0,0.0)
+--physics.setDrawMode("debug")
+
+local collision = require("src.collision")
+collision.SetGroups{"pollution", "tower", "city", "energy", "terrain"}
 
 -- Disable undeclared globals
-setmetatable(_G, {
+--[[ setmetatable(_G, {
 	__newindex = function(_ENV, var, val)
 		if var ~= 'tableDict' then
 			error(("attempt to set undeclared global \"%s\""):format(tostring(var)), 2)
@@ -23,13 +29,19 @@ setmetatable(_G, {
 			error(("attempt to read undeclared global \"%s\""):format(tostring(var)), 2)
 		end
 	end,
-})
+}) ]]--
 
 
 -- Some globals set by various corona modules
 -- Widget adds some globals
 util.DeclareGlobal("sprite")
 util.DeclareGlobal("physics")
+
+debugTexturesSheetInfo = require("data.debug-textures")
+debugTexturesImageSheet = graphics.newImageSheet( "data/debug-textures.png", debugTexturesSheetInfo:getSheet() )
+
+--util.DeclareGlobal("debugTexturesImageSheet")
+--util.DeclareGlobal("debugTexturesSheetInfo")
 
 io.output():setvbuf('no') -- Allows print statements to appear on iOS console output
 display.setStatusBar(display.HiddenStatusBar) -- hide the status bar
@@ -43,6 +55,7 @@ local gamestate = require "src.gamestate"
 --create our grid
 local Grid = require("src.grid")
 local grid = Grid:init()
+
 
 --print FPS info
 local prevTime = system.getTimer()

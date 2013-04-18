@@ -1,16 +1,18 @@
--- Pollution type
+-- Pollution!!
+local actor = require("src.actors.actor")
 
 local Pollution = actor:makeSubclass("Pollution")
 
-Ammo:makeInit(function(class, self, pollutionType)
+Pollution:makeInit(function(class, self, pollutionType)
 		
 		self.typeInfo = pollutionType
 		self.hitCount = 10
 		
-		self:createSprite("normal", trajectory.start.position.x, trajectory.start.position.y,
-		self.typeInfo.scale, self.typeInfo.scale)
-		
+		self:createSprite("pollution", 200, 200,1, 1) -- self.typeInfo.scale where the 1's are
+	
 		self:addPhysics()
-		
+		self.sprite.gravityScale = 0.0
+		return self
 end)
 
+return Pollution

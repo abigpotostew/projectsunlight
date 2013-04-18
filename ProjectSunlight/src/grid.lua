@@ -6,6 +6,11 @@
 local constants = require("src.constants")
 local class = require "src.class"
 
+local actor = require("src.actors.actor")
+
+local Pollution = require "src.actors.pollution"
+local pollutionType = require "src.actors.pollutionType"
+
 local Grid = class:makeSubclass("Grid")
 
 local tile =
@@ -124,7 +129,7 @@ Grid:makeInit(function(class, self)
     --until multitouch zoom is implemented, just zoom out all the way.
     self.group:scale(1,1)
 
-    self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
+    --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 
     
     
@@ -460,7 +465,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 		self.prevTile = currTile
 		
 		-- Update the information text to show the tile at the selected position
-		self.informationText.text = "Selected Grid Type: " .. currTile.grid.type .. " Current Pipe: " .. self.currentPipe
+		--self.informationText.text = "Selected Grid Type: " .. currTile.grid.type .. " Current Pipe: " .. self.currentPipe
 		--print(tile)
 	
 		-- Transition the player to the selected grid position
@@ -472,25 +477,31 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	--create grid sprites!!
 	for X = 1,gridColumns do
 		for Y = 1, gridRows do
-			local sprite = display.newSprite(self.sheet, self.sequenceData )
-			self.group:insert(sprite)
-			sprite:translate(X*tileWidth,Y*tileHeight)
+			local sprite = display.newImage(debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex("grass"))
+			--local sprite = display.newSprite(self.sheet, self.sequenceData )--OLD
+			
 			local sequenceId
 			if ( X == 2 and Y == 2 ) then
 			    sequenceId = "water"
 				self.grid[X][Y].type = tile.ENERGY
-				sprite:addEventListener( "touch", tileTouchEvent )
+				--sprite:addEventListener( "touch", tileTouchEvent )
 			elseif (X == 20 and Y == 10) then
 				sequenceId = "stone"
 				self.grid[X][Y].type = tile.TOWER
-				sprite:addEventListener( "touch", tileTouchEvent )
-			else
-                sequenceId = "grass"
-				sprite:addEventListener( "touch", tileTouchEvent )
-            end
+				--sprite:addEventListener( "touch", tileTouchEvent )
+			end
 			
-			sprite:setSequence(sequenceId)
-			sprite:play()
+			if sequenceId then
+				sprite:removeSelf()
+				sprite = display.newImage(debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex(sequenceId))
+			end
+			
+			self.group:insert(sprite)
+			sprite:translate(X*tileWidth,Y*tileHeight)
+			sprite:addEventListener( "touch", tileTouchEvent )
+			
+			--sprite:setSequence(sequenceId)
+			--sprite:play()
 			sprite.id = sequenceId
 			sprite.gridX = X
 			sprite.gridY = Y
@@ -505,7 +516,7 @@ end)
 
 
 Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
-	self.group = display.newImageGroup( self.sheet )
+	self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
 	self.group.xMin = -(nx-1)*display.contentWidth - self.halfW
 	self.group.yMin = -(ny-1)*display.contentHeight - self.halfH
 	self.group.xMax = self.halfW-20
@@ -546,12 +557,16 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 	
 	--This comes after creating tiles so it shows up on top of the grid
 	--This guy shows up wherever the players finger is
-	self.selectedTileOverlay = display.newSprite(self.sheet, self.sequenceData )
-	self.selectedTileOverlay:setSequence("overlay")
-	self.selectedTileOverlay:play()
+	--self.selectedTileOverlay = display.newSprite(self.sheet, self.sequenceData )
+	self.selectedTileOverlay = display.newImage(debugTexturesImageSheet, debugTexturesSheetInfo:getFrameIndex("overlay") )
+	--self.selectedTileOverlay:setSequence("overlay")
+	--self.selectedTileOverlay:play()
 	self.selectedTileOverlay.alpha = .5
 	self.selectedTileOverlay.isVisible = false
 	self.group:insert(self.selectedTileOverlay)
+	
+	local p1 = Pollution:init(pollutionType:init())
+	self.group:insert(p1.sprite)
 
 end)
 

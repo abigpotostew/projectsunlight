@@ -8,6 +8,7 @@ PollutionType:makeInit(function(class, self)
 
 	self.physics.category = "pollution"
 	self.physics.colliders = {"tower", "city", "energy", "terrain"}
+	
 
 	self.transition = {}
 	self.start = {}
@@ -15,4 +16,4 @@ PollutionType:makeInit(function(class, self)
 	return self
 end)
 
-return AmmoType
+return PollutionType

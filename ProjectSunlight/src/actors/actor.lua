@@ -8,6 +8,7 @@ local stateMachine = require "src.stateMachine"
 local class = require "src.class"
 local util = require "src.util"
 local collision = require "src.collision"
+local physics = require 'physics'
 
 local Actor = class:makeSubclass("Actor")
 
@@ -22,6 +23,8 @@ Actor:makeInit(function(class, self)
 	self.sprite = nil
 	self._timers = {}
 	self._listeners = {}
+	
+	self.sheet = debugTexturesImageSheet
 
 	return self
 end)
@@ -33,10 +36,14 @@ Actor.createSprite = Actor:makeMethod(function(self, animName, x, y, scaleX, sca
 	scaleX = scaleX or 1
 	scaleY = scaleY or 1
 
-	local sprite = spSprite.init(self.typeInfo.animSet, animName, events)
+	--local sprite = spSprite.init(self.typeInfo.animSet, animName, events)
+	local sprite = display.newImage( debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex(animName))
+	--self.sheet, self.sequenceData
 	sprite.owner = self
 	sprite.x, sprite.y = x, y
 	sprite:scale(scaleX, scaleY)
+	
+	sprite.gravityScale = 0.0
 
 	self.sprite = sprite
 end)
@@ -88,14 +95,17 @@ Actor.addPhysics = Actor:makeMethod(function(self, data)
 	local mass = data.mass or self.typeInfo.physics.mass
 
 	local phys = {
-		density = mass * 1000 / util.SumShapeAreas(self.sprite:anim():getShapes(scale)),  -- TODO: Precompute this,
+		--density = mass * 1000 / util.SumShapeAreas(self.sprite:anim():getShapes(scale)),  -- TODO: Precompute this,
+		density = 1, --we don't care about density
 		friction = data.friction or self.typeInfo.physics.friction,
 		bounce = data.bounce or self.typeInfo.physics.bounce,
 		filter = collision.MakeFilter(data.category or self.typeInfo.physics.category,
-			data.colliders or self.typeInfo.physics.colliders)
+			data.colliders or self.typeInfo.physics.colliders),
+		isSensor = self.typeInfo.physics.isSensor or false,
 	}
 
-	self.sprite:addPhysics(data.bodyType or self.typeInfo.physics.bodyType, phys, scale)
+	physics.addBody(self.sprite, phys)
+	self.sprite.bodyType = self.typeInfo.physics.bodyType or "kinematic"
 end)
 
 Actor.addTimer = Actor:makeMethod(function(self, delay, callback, count)
