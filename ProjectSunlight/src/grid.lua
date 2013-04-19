@@ -8,6 +8,8 @@ local actor = require("src.actors.actor")
 local Pollution = require "src.actors.pollution"
 local pollutionType = require "src.actors.pollutionType"
 local Tile = require "src.tile"
+local Building = require "src.actors.building"
+local Buildings = require "actors.buildings"
 
 local Grid = class:makeSubclass("Grid")
 
@@ -112,7 +114,7 @@ Grid:makeInit(function(class, self)
     --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 
     
-    
+    self:buildCity()
     
     
 	self._timers = {}
@@ -171,7 +173,7 @@ Grid.canStartPipe = Grid:makeMethod(function(self, currTile)
 end)
 
 Grid.canPipeHere = Grid:makeMethod(function(self, tile)
-	return tile.canPipeHere()
+	return tile.canBuildHere()
 end)
 
 local function getOppositeDirection(direction)
@@ -485,10 +487,50 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			sprite.tile = self.grid[X][Y]
 		end
 	end
-    
-    --CREATE SOME TOWERS & ENERGY SOURCES HERE
-    
 end)
+
+
+Grid.canBuildHere = Grid:makeMethod(function(self, tile, width, height)
+    local xStart = tile.gridX
+    local yStart = tile.gridY
+    for x = xStart, xStart+width-1 do
+        for y = yStart, yStart+height-1 do
+            if x > gridRows or y > gridColumns or self.grid[x][y]:isEmpty() == false then
+                return false
+            end
+        end
+    end
+    return true
+end)
+
+
+Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
+    gridX = gridX or math.floor(gridColumns/2)
+    gridY = gridY or math.floor(gridRows/2)
+    
+    if self:canBuildHere(self.grid[gridX][gridY],2,2) == true then
+        --BUILD IT
+        local city = Building:init(Buildings.city() ,gridX*tileSize, gridY*tileSize)
+        self:insert(city, gridX, gridY, city.width, city.height)
+    end
+end)
+
+--assumes you've checked is these tiles are available with canBuildHere()
+Grid.insert = Grid:makeMethod(function(self, tileActor, gridX, gridY)
+    assert(tileActor, "You must provide a tile actor when inserting an actor, ya doofus!")
+    assert(gridX, "You must provide a gridX postion when inserting a tile actor!")
+    assert(gridY, "You must provide a gridY postion when inserting a tile actor!")
+    local width = tileActor.width or 1
+    local height = tileActor.height or 1
+    
+    for x = gridX, gridX+width-1 do
+        for y = gridY, gridY+height-1 do
+            self.grid[x][y]:insert(tileActor)
+        end
+    end
+    self.group:insert(tileActor.sprite)
+end)
+
 
 
 Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
@@ -541,10 +583,14 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 	self.selectedTileOverlay.isVisible = false
 	self.group:insert(self.selectedTileOverlay)
 	
+    
+    --CREATE SOME TOWERS & ENERGY SOURCES HERE
 	local p1 = Pollution:init(pollutionType:init())
 	self.group:insert(p1.sprite)
+    
 
 end)
+
 
 Grid.dispose = Grid:makeMethod(function(self)
 	self.group:removeSelf()

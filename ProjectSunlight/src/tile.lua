@@ -1,5 +1,5 @@
 --Tile.lua
-
+-- Data structure for tiles on the map
 local class = require "src.class"
 
 local Tile = class:makeSubclass("Tile")
@@ -9,13 +9,18 @@ local tile =
 	NO_PIPE = -1, --can't build pipes on grid locations here
 	ENERGY = -2,
 	TOWER = -3,
+    CITY = -4,
+    BUILDING, -5, --debug
 	EMPTY = 0 --a grid position that has no pipe yet
+    --anything greater is a pipe ID
 }
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
 
 Tile:makeInit(function(class, self)
+    class.super:initWith(self)
+    self.typeName = "tile"
     self.type       = tile.EMPTY
     self.actor      = nil  --actor is any tyle object in this tile
     self.sprite    = nil --SPRITE is the background on this tile
@@ -41,16 +46,8 @@ Tile.canStartPipe = Tile:makeMethod(function(self)
 	return out
 end)
 
-Tile.canPipeHere = Tile:makeMethod(function(self)
-    local out = true
-	if self.type == tile.NO_PIPE or
-        self.type == tile.ENERGY or
-        self.type == tile.TOWER or
-        self.type > tile.EMPTY or
-        self.actor == nil then
-		out = false
-	end
-	return out
+Tile.canBuildHere = Tile:makeMethod(function(self)
+    return self:isEmpty()
 end)
 
 Tile.x = Tile:makeMethod(function(self)
@@ -64,6 +61,21 @@ end)
 Tile.isEmpty = Tile:makeMethod(function(self)
     local out = (self.type == tile.EMPTY and self.actor == nil)
     return out
+end)
+
+--assumes you've already checked whether or not this tile is empty
+Tile.insert = Tile:makeMethod(function(self, tileActor)
+    assert(tileActor, "You must provide an actor to insert")
+    if tileActor.typeName == "building" then
+        self.type = tile.BUILDING
+    elseif tileActor.typeName == "energy" then
+        self.type = tile.ENERGY
+    elseif tileActor.typeName == "city" then
+        self.type = tile.CITY
+    elseif tileActor.typeName == "tower" then
+        self.type = tile.TOWER
+    end
+    self.actor = tileActor
 end)
 
 return Tile

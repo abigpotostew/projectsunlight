@@ -5,6 +5,8 @@ local Pollution = actor:makeSubclass("Pollution")
 
 Pollution:makeInit(function(class, self, pollutionType)
 		
+        self.typeName = "pollution"
+        
 		self.typeInfo = pollutionType
 		self.hitCount = 10
 		

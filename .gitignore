@@ -4,3 +4,15 @@
 .DS_Store
 
 *.orig
+
+ Eclipse project files
+
+.metadata
+
+#gleed log file
+log.txt
+# Mac files
+.DS_STORE
+.DS_Store
+
+ProjectSunlight-Lua
