@@ -1,6 +1,7 @@
 --[[
 Project Sunlight
 ActorType
+Stores information about an actor
 ]]--
 
 --local spAnimInfo = require "src.libs.swiftping.sp_animinfo"

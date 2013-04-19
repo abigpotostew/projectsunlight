@@ -22,6 +22,8 @@ local tileSheetHeight = 256 --height of sheet image
 --Special zoom var that should be in grid.class but it's not because it doesn't work for callbacks in transition
 local zoom_id = nil
 
+local IN = 0
+local OUT = 1
 
 Grid:makeInit(function(class, self)
 	class.super:initWith(self)
@@ -225,13 +227,13 @@ end
 
 Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 	local direction = pipe.NONE
-	if currTile.x < prevTile.x then
+	if currTile.x() < prevTile.x then
 		direction = pipe.LEFT
-	elseif currTile.x > prevTile.x then
+	elseif currTile.x() > prevTile.x then
 		direction = pipe.RIGHT
-	elseif currTile.y < prevTile.y then
+	elseif currTile.y() < prevTile.y then
 		direction = pipe.UP
-	elseif currTile.y > prevTile.y then
+	elseif currTile.y() > prevTile.y then
 		direction = pipe.DOWN
 	end
 	
@@ -312,23 +314,23 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				self.group.yStart = currTile.group.y
 				self.group.xBegan = event.x
 				self.group.yBegan = event.y
-				print("start scrolling")
+				--print("start scrolling")
 			elseif currTile:canStartPipe() == true then
 				self.isPiping = true
 				self.startTile = currTile
 				self.prevTile = currTile
                 setSequence("overlay",self.selectedTileOverlay)
 				self.selectedTileOverlay.isVisible = true
-				self.selectedTileOverlay.x = currTile.x
-				self.selectedTileOverlay.y = currTile.y
-				print("start piping WOO!")
+				self.selectedTileOverlay.x = currTile.x()
+				self.selectedTileOverlay.y = currTile.y()
+				--print("start piping WOO!")
 			else
 				self.isBadPiping = true
 				self.selectedTileOverlay.isVisible = true
 				setSequence("badpipe",self.selectedTileOverlay)
-				self.selectedTileOverlay.x = currTile.x
-				self.selectedTileOverlay.y = currTile.y
-				print("bad pipe!")
+				self.selectedTileOverlay.x = currTile.x()
+				self.selectedTileOverlay.y = currTile.y()
+				--print("bad pipe!")
 			end
 		elseif event.phase == "moved" then
 			if self.isDragging == true then
@@ -363,21 +365,21 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 							end
 						end
 						currTile.tile.type = self.currentPipe
-						self.selectedTileOverlay.x = currTile.x
-						self.selectedTileOverlay.y = currTile.y
+						self.selectedTileOverlay.x = currTile.x()
+						self.selectedTileOverlay.y = currTile.y()
 						self:setPipe(currTile, self.prevTile)
 						--TODO:this is a possible bug,currently no diagonal pipe error check exists
 					else
 						self.isPiping = false
 						self.isBadPiping = true
-						self.selectedTileOverlay.x = currTile.x
-						self.selectedTileOverlay.y = currTile.y
+						self.selectedTileOverlay.x = currTile.x()
+						self.selectedTileOverlay.y = currTile.y()
 						setSequence("badpipe",self.selectedTileOverlay)
 					end
 				end
 			elseif self.isBadPiping == true then
-				--selectedTileOverlay.x = currTile.x
-				--selectedTileOverlay.y = currTile.y
+				--selectedTileOverlay.x = currTile.x()
+				--selectedTileOverlay.y = currTile.y()
 			end	
 		elseif event.phase == "ended" or event.phase == "cancelled" then
 			self.selectedTileOverlay.isVisible = false
@@ -388,21 +390,21 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			self.currentPipe = -1
 			--double tap speed == 500
 			if ( system.getTimer() - self.doubleTapMark < 500 ) then
-				print("double tap!!")
+				--print("double tap!!")
 				if ( zoom_id ) then
 					transition.cancel(zoom_id.zoom)
 					transition.cancel(zoom_id.position)
 				end
 				if ( self.zoomState == IN ) then
-					print("zooming OUT!")
+					--print("zooming OUT!")
 					self.zoomState = OUT
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
 								position=transition.to(currTile.group,{x = 0, y=0, transition=easing.outQuad}) }
 				else
 					self.zoomState = IN
-					--print("currTilex:"..currTile.x.." currTiley:"..currTile.y)
-					local targetx = -currTile.x + display.contentWidth/4
-					local targety = -currTile.y + display.contentHeight/4
+					--print("currTilex:"..currTile:x().." currTiley:"..currTile:y())
+					local targetx = -currTile:x() + display.contentWidth/4
+					local targety = -currTile:y() + display.contentHeight/4
 					--print("width:"..display.contentWidth.." height:"..display.contentHeight)
 					--print("Before Scaling!x:"..targetx.." y:"..targety)
 					if ( targetx > 0 ) then
@@ -415,7 +417,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					elseif ( targety < -display.contentHeight/2 ) then
 						targety = -display.contentHeight/2
 					end
-					print("TARGET: x:"..targetx.." y:"..targety)
+					--print("TARGET: x:"..targetx.." y:"..targety)
 					--targetx = targetx - display.contentWidth/4
 					--targety = targety - display.contentHeight/4
 					--print("zooming IN!x:"..targetx.." y:"..targety)
@@ -475,9 +477,9 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			--sprite.gridY = Y
 			--sprite.In = pipe.NONE
 			--sprite.Out = pipe.NONE
-			sprite.group = self.group
-            
-			self.grid[X][Y].terrain = sprite
+			--sprite.group = self.group
+            self.grid[X][Y].group = self.group
+			self.grid[X][Y].sprite = sprite
             self.grid[X][Y].gridX = X
             self.grid[X][Y].gridY = Y
 			sprite.tile = self.grid[X][Y]
@@ -552,8 +554,8 @@ Grid.dispose = Grid:makeMethod(function(self)
 	
 	for i = 1, gridColumns do
         for j = 1, gridRows do
-            self.grid[i][j].terrain:removeSelf()
-			self.grid[i][j].terrain = nil
+            self.grid[i][j].sprite:removeSelf()
+			self.grid[i][j].sprite = nil
 			self.grid[i][j] = nil
         end
 		self.grid[i] = nil

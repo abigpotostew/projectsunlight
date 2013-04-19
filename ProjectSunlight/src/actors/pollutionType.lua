@@ -1,7 +1,8 @@
 --Polution type
+--Stores info on polluttion types
 local actorType = require "src.actors.actorType"
 
-local PollutionType = actorType:makeSubclass("pollutionType")
+local PollutionType = actorType:makeSubclass("PollutionType")
 
 PollutionType:makeInit(function(class, self)
 	class.super:initWith(self)

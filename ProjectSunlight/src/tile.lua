@@ -14,17 +14,16 @@ local tile =
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
-local IN = 0
-local OUT = 1
 
 Tile:makeInit(function(class, self)
     self.type       = tile.EMPTY
     self.actor      = nil  --actor is any tyle object in this tile
-    self.terrain    = nil --terrain is the background on this tile
+    self.sprite    = nil --SPRITE is the background on this tile
     self.In         = pipe.NONE
     self.Out        = pipe.NONE
     self.gridX      = -1
     self.gridY      = -1
+    self.group      = nil
     return self
 end)
 
@@ -52,6 +51,14 @@ Tile.canPipeHere = Tile:makeMethod(function(self)
 		out = false
 	end
 	return out
+end)
+
+Tile.x = Tile:makeMethod(function(self)
+    return self.sprite.x
+end)
+
+Tile.y = Tile:makeMethod(function(self)
+    return self.sprite.y
 end)
 
 Tile.isEmpty = Tile:makeMethod(function(self)
