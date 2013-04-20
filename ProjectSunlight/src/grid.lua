@@ -222,7 +222,6 @@ local function setSpritePipe(_sprite)
 	end
     self.currentFrame = debugTexturesSheetInfo:getFrameIndex(id)
     --_sprite:setSequence(id, _sprite)
-    
 end
 
 --set the correct pipe in the grid data structure and on the sprite

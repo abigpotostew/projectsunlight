@@ -15,4 +15,26 @@ TileActor:makeInit(function(class, self, width, height)
     return self
 end)
 
+
+Tile.x = Tile:makeMethod(function(self)
+    assert(self.tile, "Can't call 'x()' on this tileactor because no associated tile has been set.")
+    return self.tile.x()
+end)
+
+Tile.y = Tile:makeMethod(function(self)
+    assert(self.tile, "Can't call 'y()' on this tileactor because no associated tile has been set.")
+    return self.tile.y()
+end)
+
+Tile.gridX = Tile:makeMethod(function(self)
+    assert(self.tile, "Can't call 'gridY()' on this tileactor because no associated tile has been set.")
+    return self.tile.gridX()
+end)
+
+Tile.gridX = Tile:makeMethod(function(self)
+    assert(self.tile, "Can't call 'gridY()' on this tileactor because no associated tile has been set.")
+    return self.tile.gridY()
+end)
+
+
 return TileActor
