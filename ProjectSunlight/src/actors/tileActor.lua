@@ -15,26 +15,38 @@ TileActor:makeInit(function(class, self, width, height)
     return self
 end)
 
-
-Tile.x = Tile:makeMethod(function(self)
+--returns pixel position of this tile
+TileActor.x = TileActor:makeMethod(function(self)
     assert(self.tile, "Can't call 'x()' on this tileactor because no associated tile has been set.")
     return self.tile.x()
 end)
 
-Tile.y = Tile:makeMethod(function(self)
+--returns pixel y position
+TileActor.y = TileActor:makeMethod(function(self)
     assert(self.tile, "Can't call 'y()' on this tileactor because no associated tile has been set.")
     return self.tile.y()
 end)
 
-Tile.gridX = Tile:makeMethod(function(self)
+TileActor.pos = TileActor:makeMethod(function(self)
+	assert(self.tile, "Can't get pos() on tileactor without a tile on it")
+	return {x = self.tile.x(), y = self.tile.y()}
+end)
+
+--returns grid x position
+TileActor.gridX = TileActor:makeMethod(function(self)
     assert(self.tile, "Can't call 'gridY()' on this tileactor because no associated tile has been set.")
     return self.tile.gridX()
 end)
 
-Tile.gridX = Tile:makeMethod(function(self)
+--returns grid y position
+TileActor.gridX = TileActor:makeMethod(function(self)
     assert(self.tile, "Can't call 'gridY()' on this tileactor because no associated tile has been set.")
     return self.tile.gridY()
 end)
 
+TileActor.gridPos = TileActor:makeMethod(function(self)
+	assert(self.tile, "Can't get gridPos() on tileactor without a tile on it")
+	return {x = self.tile.gridX(), y = self.tile.gridY()}
+end)
 
 return TileActor

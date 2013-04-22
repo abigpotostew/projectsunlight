@@ -10,8 +10,8 @@ local tile =
 	ENERGY = -2,
 	TOWER = -3,
     CITY = -4,
-    BUILDING, -5, --debug
-	EMPTY = 0 --a grid position that has no pipe yet
+    BUILDING = -5, --debug
+	EMPTY = -6 --a grid position that has no pipe yet
     --anything greater is a pipe ID
 }
 
@@ -20,10 +20,10 @@ local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
 Tile:makeInit(function(class, self)
     class.super:initWith(self)
-    self.typeName = "tile"
+    self.typeName 	= "tile"
     self.type       = tile.EMPTY
     self.actor      = nil  --actor is any tyle object in this tile
-    self.sprite    = nil --SPRITE is the background on this tile
+    self.sprite     = nil --SPRITE is the background on this tile
     self.In         = pipe.NONE
     self.Out        = pipe.NONE
     self.gridX      = -1
@@ -74,6 +74,8 @@ Tile.insert = Tile:makeMethod(function(self, tileActor)
         self.type = tile.CITY
     elseif tileActor.typeName == "tower" then
         self.type = tile.TOWER
+	else
+		--set the pipe ID here
     end
     self.actor = tileActor
 end)

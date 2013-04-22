@@ -14,7 +14,7 @@ physics.setGravity(0.0,0.0)
 --physics.setDrawMode("debug")
 
 local collision = require("src.collision")
-collision.SetGroups{"pollution", "tower", "city", "energy", "terrain", "building"}
+collision.SetGroups{"pollution", "tower", "city", "energy", "terrain", "building"}--building is debug!
 
 -- Disable undeclared globals
 --[[ setmetatable(_G, {

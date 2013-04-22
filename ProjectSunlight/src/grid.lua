@@ -10,6 +10,7 @@ local pollutionType = require "src.actors.pollutionType"
 local Tile = require "src.tile"
 local Building = require "src.actors.building"
 local Buildings = require "actors.buildings"
+local Energy = require "src.actors.energy"
 
 local Grid = class:makeSubclass("Grid")
 
@@ -329,8 +330,8 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				self.isBadPiping = true
 				self.selectedTileOverlay.isVisible = true
 				setSequence("badpipe",self.selectedTileOverlay)
-				self.selectedTileOverlay.x = currTile.x()
-				self.selectedTileOverlay.y = currTile.y()
+				self.selectedTileOverlay.x = currTile:x()
+				self.selectedTileOverlay.y = currTile:y()
 				--print("bad pipe!")
 			end
 		elseif event.phase == "moved" then
@@ -468,7 +469,8 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			end]]--
 			
 			self.group:insert(sprite)
-			sprite:translate(X*tileWidth,Y*tileHeight)
+			--TODO: Possible bug with positioning and gridX/Y not lining up
+			sprite:translate(X*tileWidth,Y*tileHeight)--(X-1)*tileWidth,(Y-1)*tileHeight
 			sprite:addEventListener( "touch", tileTouchEvent )
 			
 			--sprite:setSequence(sequenceId)
@@ -534,10 +536,10 @@ end)
 
 Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 	self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
-	self.group.xMin = -(nx-1)*display.contentWidth - self.halfW
-	self.group.yMin = -(ny-1)*display.contentHeight - self.halfH
-	self.group.xMax = self.halfW-20
-	self.group.yMax = self.halfH-20
+	self.group.xMin = -(nx-1)*display.contentWidth - self.halfW - tileWidth
+	self.group.yMin = -(ny-1)*display.contentHeight - self.halfH - tileHeight
+	self.group.xMax = self.halfW-20 -tileWidth
+	self.group.yMax = self.halfH-20 - tileHeight
 	
 	function self.group:touch( event )
 		if ( "began" == event.phase ) then
@@ -564,8 +566,8 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 	--group:addEventListener( "touch", group )
 	
 	
-	local x = self.halfW
-	local y = self.halfH
+	local x = self.halfW-tileWidth
+	local y = self.halfH-tileHeight
 	
 	local xMax = nx * display.contentWidth
 	local yMax = ny * display.contentHeight
@@ -586,7 +588,8 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
     --CREATE SOME TOWERS & ENERGY SOURCES HERE
 	local p1 = Pollution:init(pollutionType:init())
 	self.group:insert(p1.sprite)
-    
+    local e1 = Energy:init(Buildings.energy(),10*tileSize,2*tileSize)
+	self.group:insert(e1.sprite)
 
 end)
 
