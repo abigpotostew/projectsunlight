@@ -12,14 +12,18 @@ local physics = require 'physics'
 
 local Actor = class:makeSubclass("Actor")
 
-Actor:makeInit(function(class, self)
+Actor:makeInit(function(class, self, actorType)
 	class.super:initWith(self)
 
 	self.typeName = "actor"
 
 	self.hitCount = 0
-	self.typeInfo = {}
-	self.typeInfo.hitHoldAnims = {}
+	if actorType then
+		self.typeInfo = actorType
+	else
+		self.typeInfo = {}
+		self.typeInfo.hitHoldAnims = {}
+	end
 	self.sprite = nil
 	self._timers = {}
 	self._listeners = {}

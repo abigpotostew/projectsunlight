@@ -11,6 +11,7 @@ local Tile = require "src.tile"
 local Building = require "src.actors.building"
 local Buildings = require "actors.buildings"
 local Energy = require "src.actors.energy"
+local Pollutions = require "actors.pollutions"
 
 local Grid = class:makeSubclass("Grid")
 
@@ -114,7 +115,8 @@ Grid:makeInit(function(class, self)
 
     --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 
-    
+    self.cityX = -1 --The city position X
+	self.cityY = -1 -- The city position Y
     self:buildCity()
     
     
@@ -511,8 +513,10 @@ Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
     
     if self:canBuildHere(self.grid[gridX][gridY],2,2) == true then
         --BUILD IT
-        local city = Building:init(Buildings.city() ,gridX*tileSize, gridY*tileSize)
+        local city = Building:init(Buildings.city(), gridX*tileSize, gridY*tileSize)
         self:insert(city, gridX, gridY, city.width, city.height)
+		self.cityX = gridX*tileSize
+		self.cityY = gridY*tileSize
     end
 end)
 
@@ -586,7 +590,7 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 	
     
     --CREATE SOME TOWERS & ENERGY SOURCES HERE
-	local p1 = Pollution:init(pollutionType:init())
+	local p1 = Pollution:init(Pollutions.radiation(),200,200)
 	self.group:insert(p1.sprite)
     local e1 = Energy:init(Buildings.energy(),10*tileSize,2*tileSize)
 	self.group:insert(e1.sprite)

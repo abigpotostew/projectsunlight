@@ -3,16 +3,20 @@ local actor = require("src.actors.actor")
 
 local Pollution = actor:makeSubclass("Pollution")
 
-Pollution:makeInit(function(class, self, pollutionType)
+Pollution:makeInit(function(class, self, pollutionType, x, y)
+		class.super:initWith(self, pollutionType)
+		
+		self.typeInfo = pollutionType
 		
         self.typeName = "pollution"
         
-		self.typeInfo = pollutionType
+		
 		self.hitCount = 10
 		
-		self:createSprite("pollution", 200, 200,1, 1) -- self.typeInfo.scale where the 1's are
+		self:createSprite(self.typeInfo.anims.normal,x,y)
 	
-		self:addPhysics()
+		--self:addPhysics()
+		
 		self.sprite.gravityScale = 0.0
 		return self
 end)
