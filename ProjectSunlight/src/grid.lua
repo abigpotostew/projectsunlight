@@ -176,7 +176,7 @@ Grid.canStartPipe = Grid:makeMethod(function(self, currTile)
 end)
 
 Grid.canPipeHere = Grid:makeMethod(function(self, tile)
-	return tile.canBuildHere()
+	return tile:canBuildHere()
 end)
 
 local function getOppositeDirection(direction)
@@ -325,8 +325,8 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				self.prevTile = currTile
                 setSequence("overlay",self.selectedTileOverlay)
 				self.selectedTileOverlay.isVisible = true
-				self.selectedTileOverlay.x = currTile.x()
-				self.selectedTileOverlay.y = currTile.y()
+				self.selectedTileOverlay.x = currTile:x()
+				self.selectedTileOverlay.y = currTile:y()
 				--print("start piping WOO!")
 			else
 				self.isBadPiping = true
@@ -403,7 +403,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					--print("zooming OUT!")
 					self.zoomState = OUT
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
-								position=transition.to(currTile.group,{x = 0, y=0, transition=easing.outQuad}) }
+								position=transition.to(currTile.group,{x = currTile.group.minX, y=currTile.group.minY, transition=easing.outQuad}) }
 				else
 					self.zoomState = IN
 					--print("currTilex:"..currTile:x().." currTiley:"..currTile:y())
@@ -592,8 +592,8 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
     --CREATE SOME TOWERS & ENERGY SOURCES HERE
 	local p1 = Pollution:init(Pollutions.radiation(),200,200)
 	self.group:insert(p1.sprite)
-    local e1 = Energy:init(Buildings.energy(),10*tileSize,2*tileSize)
-	self.group:insert(e1.sprite)
+	
+    self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
 
 end)
 
