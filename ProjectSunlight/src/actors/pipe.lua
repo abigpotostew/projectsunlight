@@ -13,8 +13,8 @@ Pipe:makeInit(function(class, self, x, y, In, Out)
     class.super:initWith(self)
     
     self.typeName = "pipe"
-    self.In = nil -- pointer to the previous pipe --In or pipe.NONE
-    self.Out = nil -- pointer to the next pipe --Out or pipe.NONE
+    --self.In = nil -- pointer to the previous pipe --In or pipe.NONE
+    --self.Out = nil -- pointer to the next pipe --Out or pipe.NONE
     --self:addPhysics()
     self.Id = nil --pipe id
     
@@ -24,7 +24,7 @@ end)
 
 Pipe.setSprite = Tile:makeMethod(function(self))
     local id = nil
-	if (self.In == pipe.LEFT and self.Out == pipe.UP) or
+	if (self.tile.In == pipe.LEFT and self.Out == pipe.UP) or
 	   (self.In == pipe.UP and self.Out == pipe.LEFT) then
 		id = "leftup"
 	elseif (self.In == pipe.UP and self.Out == pipe.RIGHT) or

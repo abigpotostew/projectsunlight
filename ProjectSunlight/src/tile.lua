@@ -24,8 +24,8 @@ Tile:makeInit(function(class, self)
     self.type       = tile.EMPTY
     self.actor      = nil  --actor is any tyle object in this tile
     self.sprite     = nil --SPRITE is the background on this tile
-    self.In         = pipe.NONE
-    self.Out        = pipe.NONE
+    self.In         = nil --reference to a tile connected by pipe
+    self.Out        = nil --reference to tile connected by pipe
     self.gridX      = -1
     self.gridY      = -1
     self.group      = nil
@@ -39,8 +39,8 @@ Tile.canStartPipe = Tile:makeMethod(function(self)
 	--or on the end of a pipe
 	if self.type == tile.ENERGY or 
 		( self.type > tile.EMPTY and 
-		  self.Out == pipe.NONE 
-		  and self.In > pipe.NONE) then
+		  self.Out == nil 
+		  and self.In ~= nil ) then
 		out = true
 	end
 	return out
@@ -80,4 +80,9 @@ Tile.insert = Tile:makeMethod(function(self, tileActor)
     self.actor = tileActor
 end)
 
+--this is totally not working
+Tile.setOut = Tile:makeMethod(function(self, pipe)
+	assert(pipe, "You must provide a pipe to connect to the out.")
+	self.Out = pipe
+	pipe.tile = self
 return Tile

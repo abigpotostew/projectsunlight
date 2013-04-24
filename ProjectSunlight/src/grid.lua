@@ -365,21 +365,21 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					
 					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
 					--if freshPipe then print("fresh!") end
-					local canPipe = (self:canPipeHere(currTile))
+					local canPipe = prevTile:canStartPipe() and currTile:isEmpty()
 					if canPipe then print("can pipe!") end
-					if self:getTileType(self.prevTile) == tile.ENERGY and self:getTileType(currTile) == tile.EMPTY then
-						self.pipeCount = self.pipeCount + 1
-					end
+					--if self:getTileType(self.prevTile) == tile.ENERGY and currTile:isEmpty() then
+					--	self.pipeCount = self.pipeCount + 1
+					--end
 					--freshPipe == true or
 					if canPipe == true then
-						if self.currentPipe < 0 then 
-							if self.prevTile.tile.type <= 0 then
-								self.currentPipe = self.pipeCount
-							else
-								self.currentPipe = self.prevTile.tile.type
-							end
-						end
-						currTile.tile.type = self.currentPipe
+						--if self.currentPipe < 0 then 
+						--	if self.prevTile.tile.type <= 0 then
+						--		self.currentPipe = self.pipeCount
+						--	else
+						--		self.currentPipe = self.prevTile.tile.type
+						--	end
+						--end
+						--currTile.tile.type = self.currentPipe
 						self.selectedTileOverlay.x = currTile.x()
 						self.selectedTileOverlay.y = currTile.y()
 						self:setPipe(currTile, self.prevTile)
