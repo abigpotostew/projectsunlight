@@ -313,11 +313,13 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			--print(getTileType(currTile))
 			local tileType = currTile.type
 			if currTile:isEmpty() then
-				self.isDragging = true
-				self.group.xStart = currTile.group.x
-				self.group.yStart = currTile.group.y
-				self.group.xBegan = event.x
-				self.group.yBegan = event.y
+				if(self.zoomState == IN )then
+					self.isDragging = true
+					self.group.xStart = currTile.group.x
+					self.group.yStart = currTile.group.y
+					self.group.xBegan = event.x
+					self.group.yBegan = event.y
+				end
 				--print("start scrolling")
 			elseif currTile:canStartPipe() == true then
 				self.isPiping = true
@@ -342,12 +344,21 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				local dy = event.y - self.group.yBegan
 				local x = dx + self.group.xStart
 				local y = dy + self.group.yStart
-				if ( x < self.group.xMin ) then x = self.group.xMin end
-				if ( x > self.group.xMax ) then x = self.group.xMax end
-				if ( y < self.group.yMin ) then y = self.group.yMin end
-				if ( y > self.group.yMax ) then y = self.group.yMax end
+				if ( x < self.group.xMin ) then 
+					x = self.group.xMin 
+				end
+				if ( x > self.group.xMax ) then 
+					x = self.group.xMax 
+				end
+				if ( y < self.group.yMin ) then 
+					y = self.group.yMin 
+				end
+				if ( y > self.group.yMax ) then 
+					y = self.group.yMax 
+				end
 				self.group.x = x
 				self.group.y = y
+				print("group:["..x..", "..y.."]");
 			elseif self.isPiping == true then
 				if currTile ~= self.prevTile then
 					local path = bresenhams(self.prevTile,currTile)
@@ -403,28 +414,23 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					--print("zooming OUT!")
 					self.zoomState = OUT
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
-								position=transition.to(currTile.group,{x = currTile.group.minX, y=currTile.group.minY, transition=easing.outQuad}) }
+								position=transition.to(currTile.group,{x = self.group.xMax, y=self.group.yMax, transition=easing.outQuad}) }
 				else
+					--[1024+64+32][768+64+32]
 					self.zoomState = IN
-					--print("currTilex:"..currTile:x().." currTiley:"..currTile:y())
-					local targetx = -currTile:x() + display.contentWidth/4
-					local targety = -currTile:y() + display.contentHeight/4
-					--print("width:"..display.contentWidth.." height:"..display.contentHeight)
-					--print("Before Scaling!x:"..targetx.." y:"..targety)
-					if ( targetx > 0 ) then
-						targetx = 0
-					elseif ( targetx < -display.contentWidth/2 ) then
-						targetx = -display.contentWidth/2
+					print(currTile:x()..", "..currTile:y());
+					local targetx = -(currTile:x() - display.contentWidth/2)
+					local targety = -(currTile:y() - display.contentHeight/2)
+					if ( targetx > self.group.xMax ) then
+						targetx = self.group.xMax
+					elseif ( targetx < self.group.xMin ) then
+						targetx = self.group.xMin
 					end
-					if ( targety > 0 ) then
-						targety = 0
-					elseif ( targety < -display.contentHeight/2 ) then
-						targety = -display.contentHeight/2
+					if ( targety > self.group.yMax ) then
+						targety = self.group.yMax
+					elseif ( targety < self.group.yMin ) then
+						targety = self.group.yMin
 					end
-					--print("TARGET: x:"..targetx.." y:"..targety)
-					--targetx = targetx - display.contentWidth/4
-					--targety = targety - display.contentHeight/4
-					--print("zooming IN!x:"..targetx.." y:"..targety)
 					zoom_id = { zoom=transition.to(self.group,{xScale = 1, yScale=1, transition=easing.outQuad, onComplete=zoomingListener}), 
 								position=transition.to(self.group,{x=targetx, y=targety, transition=easing.outQuad}) }
 				end
@@ -508,8 +514,8 @@ end)
 
 
 Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
-    gridX = gridX or math.floor(gridColumns/2)
-    gridY = gridY or math.floor(gridRows/2)
+    gridX = gridX or math.floor(gridColumns/2-1)
+    gridY = gridY or math.floor(gridRows/2-1)
     
     if self:canBuildHere(self.grid[gridX][gridY],2,2) == true then
         --BUILD IT
@@ -538,14 +544,14 @@ end)
 
 
 
-Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
+Grid.createTileGroup = Grid:makeMethod(function(self)
 	self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
-	self.group.xMin = -(nx-1)*display.contentWidth - self.halfW - tileWidth
-	self.group.yMin = -(ny-1)*display.contentHeight - self.halfH - tileHeight
-	self.group.xMax = self.halfW-20 -tileWidth
-	self.group.yMax = self.halfH-20 - tileHeight
+	self.group.xMin = -display.contentWidth - self.halfW - tileWidth
+	self.group.yMin = -display.contentHeight - self.halfH - tileHeight
+	self.group.xMax = self.halfW -tileWidth
+	self.group.yMax = self.halfH - tileHeight
 	
-	function self.group:touch( event )
+	--[[function self.group:touch( event )
 		if ( "began" == event.phase ) then
 			self.xStart = self.x
 			self.yStart = self.y
@@ -564,19 +570,21 @@ Grid.createTileGroup = Grid:makeMethod(function(self, nx, ny )
 			self.y = y
 		end
 		return true
-	end
+	end]]
 	--TODO: until multitouch is enabled, don't allow scroll the group
 	--Uncomment line below to enable touch scrolling on the grid
 	--group:addEventListener( "touch", group )
 	
 	
-	local x = self.halfW-tileWidth
-	local y = self.halfH-tileHeight
+	local x = self.group.xMin --self.halfW-tileWidth
+	local y = self.group.yMin --self.halfH-tileHeight
+	self.group.x = self.group.xMax
+	self.group.y = self.group.yMax
 	
-	local xMax = nx * display.contentWidth
-	local yMax = ny * display.contentHeight
+	--local xMax = 2 * display.contentWidth
+	--local yMax = 2 * display.contentHeight
 	
-	self:createTiles( x, y, xMax, yMax, self.group )
+	self:createTiles( x, y, self.group.xMax, self.group.yMax, self.group )
 	
 	--This comes after creating tiles so it shows up on top of the grid
 	--This guy shows up wherever the players finger is
