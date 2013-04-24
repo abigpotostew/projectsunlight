@@ -18,16 +18,16 @@ local tile =
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
 
-Tile:makeInit(function(class, self)
+Tile:makeInit(function(class, self, gridX, gridY)
     class.super:initWith(self)
     self.typeName 	= "tile"
     self.type       = tile.EMPTY
     self.actor      = nil  --actor is any tyle object in this tile
     self.sprite     = nil --SPRITE is the background on this tile
-    self.In         = nil --reference to a tile connected by pipe
-    self.Out        = nil --reference to tile connected by pipe
-    self.gridX      = -1
-    self.gridY      = -1
+    --self.In         = nil --reference to a tile connected by pipe
+    --self.Out        = nil --reference to tile connected by pipe
+    self.gridX      = gridX
+    self.gridY      = gridY
     self.group      = nil
     return self
 end)
@@ -78,11 +78,7 @@ Tile.insert = Tile:makeMethod(function(self, tileActor)
 		--set the pipe ID here
     end
     self.actor = tileActor
+	tileActor.tile = self
 end)
 
---this is totally not working
-Tile.setOut = Tile:makeMethod(function(self, pipe)
-	assert(pipe, "You must provide a pipe to connect to the out.")
-	self.Out = pipe
-	pipe.tile = self
 return Tile

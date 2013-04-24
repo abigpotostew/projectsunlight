@@ -12,6 +12,7 @@ local Building = require "src.actors.building"
 local Buildings = require "actors.buildings"
 local Energy = require "src.actors.energy"
 local Pollutions = require "actors.pollutions"
+local Pipe = require "src.actors.pipe"
 
 local Grid = class:makeSubclass("Grid")
 
@@ -28,6 +29,8 @@ local zoom_id = nil
 
 local IN = 0
 local OUT = 1
+
+local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
 Grid:makeInit(function(class, self)
 	class.super:initWith(self)
@@ -61,7 +64,7 @@ Grid:makeInit(function(class, self)
     for i = 1, gridColumns do
         self.grid[i] = {}
         for j = 1, gridRows do
-            self.grid[i][j] = Tile:init()
+            self.grid[i][j] = Tile:init(i,j)
         end
     end
     
@@ -231,23 +234,26 @@ end
 
 Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 	local direction = pipe.NONE
-	if currTile.x() < prevTile.x then
+	if currTile:x() < prevTile:x() then
 		direction = pipe.LEFT
-	elseif currTile.x() > prevTile.x then
+	elseif currTile:x() > prevTile:x() then
 		direction = pipe.RIGHT
-	elseif currTile.y() < prevTile.y then
+	elseif currTile:y() < prevTile:y() then
 		direction = pipe.UP
-	elseif currTile.y() > prevTile.y then
+	elseif currTile:y() > prevTile:y() then
 		direction = pipe.DOWN
 	end
 	
-	self.prevTile.tile.Out = direction
-	currTile.tile.In = getOppositeDirection(direction)
 	
-	setSpritePipe(currTile)
-	if self.prevTile.tile.type ~= tile.ENERGY then
-		setSpritePipe(prevTile)
-	end
+	
+	currTile:insert(Pipe:init())
+	currTile.actor:setIn(prevTile, direction)
+	prevTile.actor:setOut(currTile, getOppositeDirection(direction))
+	
+	--setSpritePipe(currTile)
+	--if self.prevTile.tile.type ~= tile.ENERGY then
+	--	setSpritePipe(prevTile)
+	--end
 	
 	--("currTile: in:"..currTile.In.." out:"..currTile.Out)
 	--print("prevTile: in:"..prevTile.In.." out:"..prevTile.Out)
@@ -358,14 +364,12 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				end
 				self.group.x = x
 				self.group.y = y
-				print("group:["..x..", "..y.."]");
 			elseif self.isPiping == true then
 				if currTile ~= self.prevTile then
 					local path = bresenhams(self.prevTile,currTile)
-					
 					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
 					--if freshPipe then print("fresh!") end
-					local canPipe = prevTile:canStartPipe() and currTile:isEmpty()
+					local canPipe = self.prevTile:canStartPipe() and currTile:isEmpty()
 					if canPipe then print("can pipe!") end
 					--if self:getTileType(self.prevTile) == tile.ENERGY and currTile:isEmpty() then
 					--	self.pipeCount = self.pipeCount + 1
@@ -416,9 +420,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
 								position=transition.to(currTile.group,{x = self.group.xMax, y=self.group.yMax, transition=easing.outQuad}) }
 				else
-					--[1024+64+32][768+64+32]
 					self.zoomState = IN
-					print(currTile:x()..", "..currTile:y());
 					local targetx = -(currTile:x() - display.contentWidth/2)
 					local targety = -(currTile:y() - display.contentHeight/2)
 					if ( targetx > self.group.xMax ) then

@@ -9,7 +9,6 @@ Pollution:makeInit(function(class, self, pollutionType, x, y)
 		self.typeInfo = pollutionType
 		
         self.typeName = "pollution"
-        
 		
 		self.hitCount = 10
 		
