@@ -10,6 +10,8 @@ PollutionType:makeInit(function(class, self)
 	self.physics.category = "pollution"
 	self.physics.colliders = {"tower", "city", "energy", "terrain"}
 	
+	self.speed = 1
+	-- self.pattern = nil 
 
 	self.transition = {}
 	self.start = {}

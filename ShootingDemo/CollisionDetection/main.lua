@@ -19,7 +19,7 @@ local sky = display.newImage( "bkg_clouds.png" )
 sky.x = display.contentWidth / 2
 sky.y = 195
 
-local crate1 = display.newImage( "crate.png" )
+local crate1 = display.newImage( "Crate.png" )
 crate1.x = 180; crate1.y = -50
 crate1.myName = "first crate"
 
@@ -64,11 +64,13 @@ physics.addBody( circleBounding, { isSensor = true } )
 circleBounding.gravityScale = 0.0
 circleBounding.myName = "circle"
 
+-- create tower on left
 local tower = display.newImage ("towerRight.png" )
 tower.x = 40
 tower.y = display.contentHeight / 2
 tower.myName = "tower"
 
+-- if touched, shoot an energy ball from the location
 local function towerListener(event) 
     print("!pew!")
     local energyBall = display.newImage ("energyBall.png" )

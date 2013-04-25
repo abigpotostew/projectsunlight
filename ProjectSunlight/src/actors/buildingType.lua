@@ -21,3 +21,10 @@ BuildingType:makeInit(function(class, self)
 end)
 
 return BuildingType
+
+-- set radius
+--local circleBounding = display.newCircle( (display.contentWidth / 2) - 10 , display.contentHeight / 2, 120)
+--circleBounding:setFillColor(255,255,255,50)
+-- circleBounding.isVisible = false  -- optional
+-- physics.addBody( circleBounding, { isSensor = true } )
+-- circleBounding.myName = "circle"

@@ -114,11 +114,10 @@ Grid:makeInit(function(class, self)
     self.group:scale(1,1)
 
     --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
-
-    self.cityX = -1 --The city position X
+	
+	self.cityX = -1 --The city position X
 	self.cityY = -1 -- The city position Y
     self:buildCity()
-    
     
 	self._timers = {}
 	self._listeners = {}
@@ -523,6 +522,7 @@ Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
         self:insert(city, gridX, gridY, city.width, city.height)
 		self.cityX = gridX*tileSize
 		self.cityY = gridY*tileSize
+		self.city = city
     end
 end)
 
@@ -596,13 +596,15 @@ Grid.createTileGroup = Grid:makeMethod(function(self)
 	self.selectedTileOverlay.isVisible = false
 	self.group:insert(self.selectedTileOverlay)
 	
-    
-    --CREATE SOME TOWERS & ENERGY SOURCES HERE
-	local p1 = Pollution:init(Pollutions.radiation(),200,200)
-	self.group:insert(p1.sprite)
-	
-    self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
+end)
 
+Grid.createPollution = Grid:makeMethod(function(self) 
+	 --CREATE SOME TOWERS & ENERGY SOURCES HERE
+	local p1 = Pollution:init(Pollutions.radiation(),200,200)
+	p1:setTarget(self.cityX,self.cityY)
+	p1:setDirection()
+	self.group:insert(p1.sprite)
+    self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
 end)
 
 

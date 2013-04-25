@@ -99,7 +99,7 @@ end)
 
 Vector2.dot = Vector2:makeMethod(function(self, other)
 	assert(isVector2Equivalent(other), "Can't perform Vector2 dot product on dissimilar object of type " .. type(b))
-	return Vector2:init(self.x * other.x, self.y * other.y)
+	return (self.x * other.x + self.y * other.y)
 end)
 
 Vector2.length = Vector2:makeMethod(function(self)
