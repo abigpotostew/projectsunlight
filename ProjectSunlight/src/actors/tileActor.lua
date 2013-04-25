@@ -8,10 +8,8 @@ local TileActor = actor:makeSubclass("TileActor")
 TileActor:makeInit(function(class, self, width, height)
     class.super:initWith(self)
     self.tile = nil -- The top left tile occupied by this actor.
-    self.width = 1
-    self.height = 1
-    
-    
+    self.width = width or 1
+    self.height = height or 1
     return self
 end)
 
@@ -47,6 +45,11 @@ end)
 TileActor.gridPos = TileActor:makeMethod(function(self)
 	assert(self.tile, "Can't get gridPos() on tileactor without a tile on it")
 	return {x = self.tile.gridX(), y = self.tile.gridY()}
+end)
+
+TileActor.pos = TileActor:makeMethod(function(self)
+	assert(self.sprite, "Can't get the position from TileActor.pos() when no sprite is set")
+	return{x = self.sprite.x, y = self.tile.y}
 end)
 
 return TileActor
