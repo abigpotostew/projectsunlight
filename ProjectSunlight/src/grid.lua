@@ -243,11 +243,13 @@ Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 		direction = pipe.DOWN
 	end
 	
-	
-	
-	currTile:insert(Pipe:init())
+	currTile:insert(Pipe:init(currTile:x(), currTile:y(),self.group))
 	currTile.actor:setIn(prevTile, direction)
-	prevTile.actor:setOut(currTile, getOppositeDirection(direction))
+	self.group:insert(currTile.sprite)
+	if(prevTile.typeName=="pipe") then
+		prevTile.actor:setOut(currTile, getOppositeDirection(direction))
+		self.group:insert(prevTile.sprite)
+	end
 	
 	--setSpritePipe(currTile)
 	--if self.prevTile.tile.type ~= tile.ENERGY then
@@ -383,15 +385,15 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 						--	end
 						--end
 						--currTile.tile.type = self.currentPipe
-						self.selectedTileOverlay.x = currTile.x()
-						self.selectedTileOverlay.y = currTile.y()
+						self.selectedTileOverlay.x = currTile:x()
+						self.selectedTileOverlay.y = currTile:y()
 						self:setPipe(currTile, self.prevTile)
 						--TODO:this is a possible bug,currently no diagonal pipe error check exists
 					else
 						self.isPiping = false
 						self.isBadPiping = true
-						self.selectedTileOverlay.x = currTile.x()
-						self.selectedTileOverlay.y = currTile.y()
+						self.selectedTileOverlay.x = currTile:x()
+						self.selectedTileOverlay.y = currTile:y()
 						setSequence("badpipe",self.selectedTileOverlay)
 					end
 				end
@@ -607,6 +609,7 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
     self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
+    print("hey")
 end)
 
 

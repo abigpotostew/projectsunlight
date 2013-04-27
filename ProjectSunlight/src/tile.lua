@@ -79,6 +79,8 @@ Tile.insert = Tile:makeMethod(function(self, tileActor)
     end
     self.actor = tileActor
 	tileActor.tile = self
+	--Grid should always add things to group. make sure!!
+	--self.group:insert(tileActor.sprite)
 end)
 
 return Tile

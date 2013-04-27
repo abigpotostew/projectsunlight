@@ -9,7 +9,8 @@ local OUT = 1
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
-Pipe:makeInit(function(class, self)
+Pipe:makeInit(function(class, self, x, y, group)
+    assert(group,"You must initialize this pipe with a group in the constructor!")
     class.super:initWith(self, 1, 1)--pipes are 1x1 by default
     
     self.typeName = "pipe"
@@ -20,6 +21,9 @@ Pipe:makeInit(function(class, self)
 	self.InDir = pipe.NONE
 	self.OutDir = pipe.NONE
     self.Id = nil --pipe id
+    self.group = group
+    self.x = x
+    self.y = y
 	
     return self
 end)
@@ -32,12 +36,14 @@ Pipe.setIn = Pipe:makeMethod(function(self, other, direction)
 		self.startConnection = other
 	end
 	--do start connection checks here
+    self:setSprite()
 end)
 
 Pipe.setOut = Pipe:makeMethod(function(self, other, direction)
 	assert(other,"Please privide an actor to set this pipe's out")
 	self.Out = other
 	self.OutDir = direction or pipe.NONE
+    self:setSprite()
 	--if other.typeName ~= "pipe" then
 	--	self.startConnection = other
 	--end
@@ -75,11 +81,16 @@ Pipe.setSprite = Pipe:makeMethod(function(self)
 	else
 		assert(id, "You're pipes are misaligned, I can't decide what sprite to put in.")
 	end
-	local oldX, oldY = self.sprite.x, self.sprite.y
-	self.sprite:removeSelf()
-	self.sprite = nil
+	
+	local group = self.group --group is initialized in this pipe's constructor
+	local oldX, oldY = self.x, self.y
+	if self.sprite then
+        self.sprite:removeSelf()
+        self.sprite = nil
+    end
 	self:createSprite(id,oldX+(self.width/2*64),oldY+(self.height/2*64))
+	--group:insert(self.sprite)
     --self.createSprite(id, )-- = debugTexturesSheetInfo:getFrameIndex(id)
 end)
 
-return Tile
+return Pipe

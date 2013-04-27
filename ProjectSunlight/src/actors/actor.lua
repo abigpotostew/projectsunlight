@@ -29,6 +29,8 @@ Actor:makeInit(function(class, self, actorType)
 	self._listeners = {}
 	
 	self.sheet = debugTexturesImageSheet
+    
+    self.group = nil
 
 	return self
 end)
