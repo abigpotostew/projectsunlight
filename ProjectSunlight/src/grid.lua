@@ -246,21 +246,13 @@ Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 		direction = pipe.DOWN
 	end
 	
-	currTile:insert(Pipe:init(currTile:x(), currTile:y(),self.group))
-	currTile.actor:setIn(prevTile, direction)
-	self.group:insert(currTile.sprite)
-	if(prevTile.typeName=="pipe") then
-		prevTile.actor:setOut(currTile, getOppositeDirection(direction))
-		self.group:insert(prevTile.sprite)
+	currTile:insert(Pipe:init())
+	currTile.actor:setIn(prevTile.actor, getOppositeDirection(direction))
+	self.group:insert(currTile.actor.sprite) --insert the new sprite
+	if(prevTile:canContinuePipe()) then
+		prevTile.actor:setOut(currTile, direction)
+		self.group:insert(prevTile.actor.sprite)
 	end
-	
-	--setSpritePipe(currTile)
-	--if self.prevTile.tile.type ~= tile.ENERGY then
-	--	setSpritePipe(prevTile)
-	--end
-	
-	--("currTile: in:"..currTile.In.." out:"..currTile.Out)
-	--print("prevTile: in:"..prevTile.In.." out:"..prevTile.Out)
 end)
 
 local function setSequence(seqName, sprite)
@@ -536,38 +528,10 @@ Grid.createTileGroup = Grid:makeMethod(function(self)
         self.group.yMax =  self.halfH -tileHeight --ditto
     end
 	
-	--[[function self.group:touch( event )
-		if ( "began" == event.phase ) then
-			self.xStart = self.x
-			self.yStart = self.y
-			self.xBegan = event.x
-			self.yBegan = event.y
-		elseif ( "moved" == event.phase ) then
-			local dx = event.x - self.xBegan
-			local dy = event.y - self.yBegan
-			local x = dx + self.xStart
-			local y = dy + self.yStart
-			if ( x < self.xMin ) then x = self.xMin end
-			if ( x > self.xMax ) then x = self.xMax end
-			if ( y < self.yMin ) then y = self.yMin end
-			if ( y > self.yMax ) then y = self.yMax end
-			self.x = x
-			self.y = y
-		end
-		return true
-	end]]
-	--TODO: until multitouch is enabled, don't allow scroll the group
-	--Uncomment line below to enable touch scrolling on the grid
-	--group:addEventListener( "touch", group )
-	
-	
 	local x = self.group.xMin --self.halfW-tileWidth
 	local y = self.group.yMin --self.halfH-tileHeight
 	self.group.x = self.group.xMax
 	self.group.y = self.group.yMax
-	
-	--local xMax = 2 * display.contentWidth
-	--local yMax = 2 * display.contentHeight
 	
 	self:createTiles( x, y, self.group.xMax, self.group.yMax, self.group )
 	
@@ -591,7 +555,7 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
     self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
-    print("hey")
+    print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
 
 

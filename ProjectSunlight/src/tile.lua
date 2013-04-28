@@ -50,6 +50,11 @@ Tile.canStartPipe = Tile:makeMethod(function(self)
 	return out
 end)
 
+Tile.canContinuePipe = Tile:makeMethod(function(self)
+    return ( self.actor.typeName == "pipe" and
+           self.actor:canContinuePipe() )
+end)
+
 Tile.canBuildHere = Tile:makeMethod(function(self)
     return self:isEmpty()
 end)

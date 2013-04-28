@@ -9,8 +9,8 @@ local OUT = 1
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
-Pipe:makeInit(function(class, self, x, y)
-    --assert(group,"You must initialize this pipe with a group in the constructor!")
+Pipe:makeInit(function(class, self)
+    --assert(tile,"You must initialize this pipe with a tile in the constructor!")
     class.super:initWith(self, 1, 1)--pipes are 1x1 by default
     
     self.typeName = "pipe"
@@ -22,9 +22,7 @@ Pipe:makeInit(function(class, self, x, y)
 	self.OutDir = pipe.NONE
     self.Id = nil --pipe id
     --self.group = group --grid adds the new pipe sprite to group
-    self.x = x
-    self.y = y
-	
+    --self.tile = tile
     return self
 end)
 
@@ -84,14 +82,18 @@ Pipe.setSprite = Pipe:makeMethod(function(self)
 	
     
 	--local group = self.group --group is initialized in this pipe's constructor
-	local oldX, oldY = self.x, self.y
 	if self.sprite then
         self.sprite:removeSelf()
         self.sprite = nil
     end
-	self:createSprite(id,oldX,oldY)
+	self:createSprite(id,self.tile:x(),self.tile:y())
+    self.tile:insert(self)
 	--group:insert(self.sprite)
     --self.createSprite(id, )-- = debugTexturesSheetInfo:getFrameIndex(id)
+end)
+
+Pipe.canContinuePipe = Pipe:makeMethod(function(self)
+    return ( self.In ~= nil  and self.Out == nil )
 end)
 
 return Pipe
