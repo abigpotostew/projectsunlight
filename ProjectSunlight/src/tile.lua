@@ -1,11 +1,13 @@
 --Tile.lua
 -- Data structure for tiles on the map
-local class = require "src.class"
 
-local Tile = class:makeSubclass("Tile")
+local actor = require "src.actors.actor"
+
+local Tile = actor:makeSubclass("Tile")
 
 local tile =
 	{
+    PIPE = 1, --possible need pipe id's as 1+
 	NO_PIPE = -1, --can't build pipes on grid locations here
 	ENERGY = -2,
 	TOWER = -3,
@@ -18,17 +20,19 @@ local tile =
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
 
-Tile:makeInit(function(class, self, gridX, gridY)
+Tile:makeInit(function(class, self, x, y, gridX, gridY)
     class.super:initWith(self)
     self.typeName 	= "tile"
-    self.type       = tile.EMPTY
+    self.type       = tile.EMPTY --the type occupying this tile
     self.actor      = nil  --actor is any tyle object in this tile
-    self.sprite     = nil --SPRITE is the background on this tile
+    --self.sprite     = nil --SPRITE is the background on this tile
     --self.In         = nil --reference to a tile connected by pipe
     --self.Out        = nil --reference to tile connected by pipe
     self.gridX      = gridX
     self.gridY      = gridY
-    self.group      = nil
+    
+    self:createSprite("grass",x,y) --default background for the level
+    self.sprite.tile = self
     return self
 end)
 
@@ -75,6 +79,7 @@ Tile.insert = Tile:makeMethod(function(self, tileActor)
     elseif tileActor.typeName == "tower" then
         self.type = tile.TOWER
 	else
+        self.type = 0 --- a pipe
 		--set the pipe ID here
     end
     self.actor = tileActor

@@ -7,7 +7,7 @@
 local util = require("src.util")
 require("mobdebug").start()
 
-
+print( system.getInfo( "maxTextureSize" ) )
 
 local physics = require("physics")
 physics.start()

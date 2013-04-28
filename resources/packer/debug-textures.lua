@@ -1,14 +1,11 @@
 --
--- created with TexturePacker (http://www.texturepacker.com)
+-- created with TexturePacker (http://www.codeandweb.com/texturepacker)
 --
--- $TexturePacker:SmartUpdate:239315ee4ea5b8cf4a291d1be5aa8018$
+-- $TexturePacker:SmartUpdate:928b730a4f58e356c47721c411203968$
 --
--- local sheetInfo = require("myExportedImageSheet") -- lua file that Texture packer published
---
--- local myImageSheet = graphics.newImageSheet( "ImageSheet.png", sheetInfo:getSheet() ) -- ImageSheet.png is the image Texture packer published
---
--- local myImage1 = display.newImage( myImageSheet , sheetInfo:getFrameIndex("image_name1"))
--- local myImage2 = display.newImage( myImageSheet , sheetInfo:getFrameIndex("image_name2"))
+-- local sheetInfo = require("mysheet")
+-- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
+-- local sprite = display.newSprite( myImageSheet , {frames={sheetInfo:getFrameIndex("sprite")}} )
 --
 
 local SheetInfo = {}

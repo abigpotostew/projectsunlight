@@ -13,7 +13,7 @@ Building:makeInit(function(class, self, buildingType, x, y)
     self.width = buildingType.width
     self.height = buildingType.height
     --Doesn't have much yet, but will have events and health and whatever.
-    self:createSprite(self.typeInfo.anims.normal,x+(self.width/2*64),y+(self.height/2*64))
+    self:createSprite(self.typeInfo.anims.normal,x,y)--x+(self.width/2*64),y+(self.height/2*64)
     self:addPhysics()
     
     return self

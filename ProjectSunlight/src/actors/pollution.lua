@@ -17,6 +17,7 @@ Pollution:makeInit(function(class, self, pollutionType, x, y)
 		self.hitCount = 10
 		
 		self:createSprite(self.typeInfo.anims.normal,x,y)
+        self.sprite:setReferencePoint( display.CenterReferencePoint )
 	
 		self:addPhysics()
 		

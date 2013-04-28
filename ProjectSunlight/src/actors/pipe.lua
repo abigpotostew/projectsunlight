@@ -9,8 +9,8 @@ local OUT = 1
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
-Pipe:makeInit(function(class, self, x, y, group)
-    assert(group,"You must initialize this pipe with a group in the constructor!")
+Pipe:makeInit(function(class, self, x, y)
+    --assert(group,"You must initialize this pipe with a group in the constructor!")
     class.super:initWith(self, 1, 1)--pipes are 1x1 by default
     
     self.typeName = "pipe"
@@ -21,7 +21,7 @@ Pipe:makeInit(function(class, self, x, y, group)
 	self.InDir = pipe.NONE
 	self.OutDir = pipe.NONE
     self.Id = nil --pipe id
-    self.group = group
+    --self.group = group --grid adds the new pipe sprite to group
     self.x = x
     self.y = y
 	
@@ -70,25 +70,26 @@ Pipe.setSprite = Pipe:makeMethod(function(self)
 	elseif (self.InDir == pipe.UP and self.OutDir == pipe.DOWN) or
 		   (self.InDir == pipe.DOWN and self.OutDir == pipe.UP) then
 		id = "vert"
-	elseif self.OutDir == pipe.UP or selfInDir == pipe.UP then
+	elseif self.InDir == pipe.UP then
 		id = "upstop"
-	elseif self.OutDir == pipe.DOWN or self.InDir == pipe.DOWN then
+	elseif self.InDir == pipe.DOWN then -- self.OutDir == pipe.DOWN or
 		id = "downstop"
-	elseif self.OutDir == pipe.RIGHT or self.InDir == pipe.RIGHT then
+	elseif self.InDir == pipe.RIGHT then -- self.OutDir == pipe.RIGHT or 
 		id = "rightstop"
-	elseif self.OutDir == pipe.LEFT or self.InDir == pipe.LEFT then
+	elseif self.InDir == pipe.LEFT then --self.OutDir == pipe.LEFT or 
 		id = "leftstop"
 	else
 		assert(id, "You're pipes are misaligned, I can't decide what sprite to put in.")
 	end
 	
-	local group = self.group --group is initialized in this pipe's constructor
+    
+	--local group = self.group --group is initialized in this pipe's constructor
 	local oldX, oldY = self.x, self.y
 	if self.sprite then
         self.sprite:removeSelf()
         self.sprite = nil
     end
-	self:createSprite(id,oldX+(self.width/2*64),oldY+(self.height/2*64))
+	self:createSprite(id,oldX,oldY)
 	--group:insert(self.sprite)
     --self.createSprite(id, )-- = debugTexturesSheetInfo:getFrameIndex(id)
 end)
