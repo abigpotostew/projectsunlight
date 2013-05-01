@@ -59,6 +59,7 @@ local Grid = require("src.grid")
 local grid = Grid:init()
 -- DON'T DO IT!!! --
 grid:createPollution()
+grid:createEnergy()
 
 --print FPS info
 local prevTime = system.getTimer()

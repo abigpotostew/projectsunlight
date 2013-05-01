@@ -2,7 +2,6 @@
 --info on building type actors
 
 local actorType = require "src.actors.actorType"
-
 local BuildingType = actorType:makeSubclass("BuildingType")
 
 BuildingType:makeInit(function(class, self)
@@ -13,6 +12,9 @@ BuildingType:makeInit(function(class, self)
     
     self.width = 1
     self.height = 1
+
+	-- set radius
+	self.radius = 100
 
 	self.transition = {}
 	self.start = {}

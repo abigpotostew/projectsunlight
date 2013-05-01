@@ -14,9 +14,11 @@ Pollution:makeInit(function(class, self, pollutionType, x, y)
 			
 		self.target = nil
 		
+		self.speed = pollutionType.speed
+		
 		self.hitCount = 10
 		
-		self:createSprite(self.typeInfo.anims.normal,x,y)
+		self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
 	
 		self:addPhysics()
 		
@@ -32,7 +34,7 @@ Pollution.setDirection = Pollution:makeMethod(function(self)
 	if (self.target ~= nil) then
 	    self.myVector = self.myVector - self.target
         self.myVector:normalized() 
-        self.myVector = self.myVector * (.05)
+        self.myVector = self.myVector * (.05) * self.speed
         self.sprite:setLinearVelocity(self.myVector.x, self.myVector.y)
 	end
 end)
