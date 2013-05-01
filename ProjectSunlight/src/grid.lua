@@ -60,13 +60,7 @@ Grid:makeInit(function(class, self)
 
     self.grid = {} --a 2D array of pipe informations
 
-	--Initialize the grid
-    for i = 1, gridColumns do
-        self.grid[i] = {}
-        for j = 1, gridRows do
-            self.grid[i][j] = Tile:init(i,j)
-        end
-    end
+	
     
     self.sheetData = { 
         width=tileWidth,
@@ -115,6 +109,15 @@ Grid:makeInit(function(class, self)
 
     --until multitouch zoom is implemented, just zoom out all the way.
     self.group:scale(1,1)
+
+    --Initialize the grid
+    --[[for i = 1, gridColumns do
+        self.grid[i] = {}
+        for j = 1, gridRows do
+            self.grid[i][j] = Tile:init(i*tileSize, j*tileSize, i, j)
+            self.grid[i][j].group = self.group
+        end
+    end]]
 
     --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 	
@@ -243,19 +246,13 @@ Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
 		direction = pipe.DOWN
 	end
 	
-	
-	
 	currTile:insert(Pipe:init())
-	currTile.actor:setIn(prevTile, direction)
-	prevTile.actor:setOut(currTile, getOppositeDirection(direction))
-	
-	--setSpritePipe(currTile)
-	--if self.prevTile.tile.type ~= tile.ENERGY then
-	--	setSpritePipe(prevTile)
-	--end
-	
-	--("currTile: in:"..currTile.In.." out:"..currTile.Out)
-	--print("prevTile: in:"..prevTile.In.." out:"..prevTile.Out)
+	currTile.actor:setIn(prevTile.actor, getOppositeDirection(direction))
+	self.group:insert(currTile.actor.sprite) --insert the new sprite
+	if(prevTile:canContinuePipe()) then
+		prevTile.actor:setOut(currTile, direction)
+		self.group:insert(prevTile.actor.sprite)
+	end
 end)
 
 local function setSequence(seqName, sprite)
@@ -383,15 +380,15 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 						--	end
 						--end
 						--currTile.tile.type = self.currentPipe
-						self.selectedTileOverlay.x = currTile.x()
-						self.selectedTileOverlay.y = currTile.y()
+						self.selectedTileOverlay.x = currTile:x()
+						self.selectedTileOverlay.y = currTile:y()
 						self:setPipe(currTile, self.prevTile)
 						--TODO:this is a possible bug,currently no diagonal pipe error check exists
 					else
 						self.isPiping = false
 						self.isBadPiping = true
-						self.selectedTileOverlay.x = currTile.x()
-						self.selectedTileOverlay.y = currTile.y()
+						self.selectedTileOverlay.x = currTile:x()
+						self.selectedTileOverlay.y = currTile:y()
 						setSequence("badpipe",self.selectedTileOverlay)
 					end
 				end
@@ -420,8 +417,8 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 								position=transition.to(currTile.group,{x = self.group.xMax, y=self.group.yMax, transition=easing.outQuad}) }
 				else
 					self.zoomState = IN
-					local targetx = -(currTile:x() - display.contentWidth/2)
-					local targety = -(currTile:y() - display.contentHeight/2)
+					local targetx = -(currTile:x()+self.halfW - display.contentWidth/2)
+					local targety = -(currTile:y()+self.halfH - display.contentHeight/2)
 					if ( targetx > self.group.xMax ) then
 						targetx = self.group.xMax
 					elseif ( targetx < self.group.xMin ) then
@@ -455,46 +452,15 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	end
 	
 	
+    
     --create grid sprites!!
 	for X = 1,gridColumns do
+        self.grid[X] = {}
 		for Y = 1, gridRows do
-			local sprite = display.newImage(debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex("grass"))
-			--local sprite = display.newSprite(self.sheet, self.sequenceData )--OLD
-			
-			--[[local sequenceId
-			if ( X == 2 and Y == 2 ) then
-			    sequenceId = "energy"
-				self.grid[X][Y].type = tile.ENERGY
-				--sprite:addEventListener( "touch", tileTouchEvent )
-			elseif (X == 20 and Y == 10) then
-				sequenceId = "tower"
-				self.grid[X][Y].type = tile.TOWER
-				--sprite:addEventListener( "touch", tileTouchEvent )
-			end
-			
-			if sequenceId then
-				sprite:removeSelf()
-				sprite = display.newImage(debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex(sequenceId))
-			end]]--
-			
-			self.group:insert(sprite)
-			--TODO: Possible bug with positioning and gridX/Y not lining up
-			sprite:translate(X*tileWidth,Y*tileHeight)--(X-1)*tileWidth,(Y-1)*tileHeight
-			sprite:addEventListener( "touch", tileTouchEvent )
-			
-			--sprite:setSequence(sequenceId)
-			--sprite:play()
-			--sprite.id = sequenceId
-			--sprite.gridX = X
-			--sprite.gridY = Y
-			--sprite.In = pipe.NONE
-			--sprite.Out = pipe.NONE
-			--sprite.group = self.group
+			self.grid[X][Y] = Tile:init(X*tileSize, Y*tileSize, X, Y)
             self.grid[X][Y].group = self.group
-			self.grid[X][Y].sprite = sprite
-            self.grid[X][Y].gridX = X
-            self.grid[X][Y].gridY = Y
-			sprite.tile = self.grid[X][Y]
+			self.grid[X][Y].sprite:addEventListener( "touch", tileTouchEvent )
+            self.group:insert(self.grid[X][Y].sprite)
 		end
 	end
 end)
@@ -547,45 +513,25 @@ end)
 
 
 Grid.createTileGroup = Grid:makeMethod(function(self)
-	--self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
-	self.group = display.newGroup( )--self.sheet )
-	self.group.xMin = -display.contentWidth - self.halfW - tileWidth
-	self.group.yMin = -display.contentHeight - self.halfH - tileHeight
-	self.group.xMax = self.halfW -tileWidth
-	self.group.yMax = self.halfH - tileHeight
-	
-	--[[function self.group:touch( event )
-		if ( "began" == event.phase ) then
-			self.xStart = self.x
-			self.yStart = self.y
-			self.xBegan = event.x
-			self.yBegan = event.y
-		elseif ( "moved" == event.phase ) then
-			local dx = event.x - self.xBegan
-			local dy = event.y - self.yBegan
-			local x = dx + self.xStart
-			local y = dy + self.yStart
-			if ( x < self.xMin ) then x = self.xMin end
-			if ( x > self.xMax ) then x = self.xMax end
-			if ( y < self.yMin ) then y = self.yMin end
-			if ( y > self.yMax ) then y = self.yMax end
-			self.x = x
-			self.y = y
-		end
-		return true
-	end]]
-	--TODO: until multitouch is enabled, don't allow scroll the group
-	--Uncomment line below to enable touch scrolling on the grid
-	--group:addEventListener( "touch", group )
-	
+	self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
+	local centerReferencePoint = false
+    local topLeftReferencePoint = true
+    if centerReferencePoint then
+        self.group.xMin = -display.contentWidth  - tileWidth -- -self.halfW
+        self.group.yMin = -display.contentHeight  - tileHeight -- -self.halfH
+        self.group.xMax = 0 --self.halfW*2 -tileWidth --
+        self.group.yMax =  0 --self.halfH*2 -tileHeight --
+    elseif topLeftReferencePoint then
+        self.group.xMin = -display.contentWidth  -self.halfW- tileWidth -- 
+        self.group.yMin = -display.contentHeight -self.halfH - tileHeight -- 
+        self.group.xMax = self.halfW -tileWidth --this gives a slightly black border 32px wide
+        self.group.yMax =  self.halfH -tileHeight --ditto
+    end
 	
 	local x = self.group.xMin --self.halfW-tileWidth
 	local y = self.group.yMin --self.halfH-tileHeight
 	self.group.x = self.group.xMax
 	self.group.y = self.group.yMax
-	
-	--local xMax = 2 * display.contentWidth
-	--local yMax = 2 * display.contentHeight
 	
 	self:createTiles( x, y, self.group.xMax, self.group.yMax, self.group )
 	
@@ -598,15 +544,18 @@ Grid.createTileGroup = Grid:makeMethod(function(self)
 	self.selectedTileOverlay.alpha = .5
 	self.selectedTileOverlay.isVisible = false
 	self.group:insert(self.selectedTileOverlay)
+    self.selectedTileOverlay:setReferencePoint( display.TopLeftReferencePoint)
 	
 end)
 
 Grid.createPollution = Grid:makeMethod(function(self) 
 	 --CREATE SOME TOWERS & ENERGY SOURCES HERE
-	local p1 = Pollution:init(Pollutions.radiation(),200,200)
+	local p1 = Pollution:init(Pollutions.radiation(),0,0)
 	p1:setTarget(self.cityX,self.cityY)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
+    self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
+    print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
 
 Grid.createEnergy = Grid:makeMethod(function(self) 

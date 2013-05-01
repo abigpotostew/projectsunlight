@@ -29,6 +29,8 @@ Actor:makeInit(function(class, self, actorType)
 	self._listeners = {}
 	
 	self.sheet = debugTexturesImageSheet
+    
+    self.group = nil
 
 	return self
 end)
@@ -43,6 +45,7 @@ Actor.createSprite = Actor:makeMethod(function(self, animName, x, y, scaleX, sca
 	--local sprite = spSprite.init(self.typeInfo.animSet, animName, events)
 	local sprite = display.newImage( debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex(animName))
 	--self.sheet, self.sequenceData
+    sprite:setReferencePoint( display.TopLeftReferencePoint )
 	sprite.owner = self
 	sprite.x, sprite.y = x, y
 	sprite:scale(scaleX, scaleY)
