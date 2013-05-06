@@ -31,7 +31,7 @@ Tile:makeInit(function(class, self, x, y, gridX, gridY)
     self.gridX      = gridX
     self.gridY      = gridY
     
-    self:createSprite("grass",x,y) --default background for the level
+    self.sprite = self:createSprite("grass",x,y) --default background for the level
     self.sprite.tile = self
     return self
 end)

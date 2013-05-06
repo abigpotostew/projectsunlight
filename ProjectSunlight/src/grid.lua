@@ -513,7 +513,7 @@ end)
 
 
 Grid.createTileGroup = Grid:makeMethod(function(self)
-	self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
+	self.group = display.newGroup( ) --debugTexturesImageSheet )--self.sheet )
 	local centerReferencePoint = false
     local topLeftReferencePoint = true
     if centerReferencePoint then
@@ -554,22 +554,23 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	p1:setTarget(self.cityX,self.cityY)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
-    self:insert(Energy:init(Buildings.energy(),10*tileSize,2*tileSize),10,2)
+    self:insert(Energy:init(Buildings.basic(),10*tileSize,2*tileSize),10,2)
     print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
 
 Grid.createEnergy = Grid:makeMethod(function(self) 
 	local e1 = Building:init(Buildings.basic(),10*tileSize,8*tileSize,10,8)
-	e1:displayRadius()
 	--e1.radiusSprite = e1:createSprite("pollution_wind",e1.radiusX, e1.radiusY,2,2)
-	e1.radiusSprite = display.newCircle(e1.radiusX, e1.radiusY, e1.radius)
-	e1.radiusSprite.alpha = .5
+	e1:displayRadius()
+	e1:addCollision()
 	--e1.radiusSprite.isVisible = false 
 	self.group:insert(e1.sprite)
 	self.group:insert(e1.radiusSprite)
 	
+	--e1.collision = onCollision
+	--e1:addEventListener( "collision", e1 )
 	
-	self.group:insert(e1.radiusSprite)
+	--self.group:insert(e1.radiusSprite)
     --self:insert(Energy:init(Buildings.basic(),10*tileSize,8*tileSize),10,8)
 end)
 
