@@ -36,15 +36,18 @@ Tile:makeInit(function(class, self, x, y, gridX, gridY)
     return self
 end)
 
-Tile.canStartPipe = Tile:makeMethod(function(self)
+Tile.canStartPipe = Tile:makeMethod(function(self,outDirection)
+	--assert(outDirection,"Please provide an out direction when calling this method")
     local out = false
 	--local grid = currTile.grid
 	--You can start dragging a pipe when the initial touch begins on an energy source
 	--or on the end of a pipe
-	if self.type == tile.ENERGY or 
-		( self.type > tile.EMPTY and 
-		  self.Out == nil 
-		  and self.In ~= nil ) then
+	if (self.actor.typeName == "energy" and 
+		self.actor.canStartPipe(outDirection))
+		or 
+		(self.type > tile.EMPTY and 
+		 self.Out == nil 
+		 and self.In ~= nil ) then
 		out = true
 	end
 	return out
@@ -91,6 +94,22 @@ Tile.insert = Tile:makeMethod(function(self, tileActor)
 	tileActor.tile = self
 	--Grid should always add things to group. make sure!!
 	--self.group:insert(tileActor.sprite)
+end)
+
+Tile.directionTo = Tile:makeMethod(function(self, destinationTile)
+	assert(destinationTile,"Provide destination tile for this method")
+	--assert(destinationTile:isA(self),"destinationTile must be a tile")
+	if self:x() > destinationTile:x() then
+		return pipe.LEFT
+	elseif self:x() < destinationTile:x() then
+		return pipe.RIGHT
+	elseif self:y() > destinationTile:y() then
+		return pipe.UP
+	elseif self:y() < destinationTile:y() then
+		return pipe.DOWN
+	else
+		return pipe.NONE
+	end
 end)
 
 return Tile

@@ -19,4 +19,6 @@ Building:makeInit(function(class, self, buildingType, x, y)
     return self
 end)
 
+
+
 return Building

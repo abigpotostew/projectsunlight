@@ -101,8 +101,6 @@ Grid:makeInit(function(class, self)
     self.startTile = nil
     self.prevTile = nil
     
-    
-    
     local nx = 2
     local ny = 2
     self:createTileGroup( nx, ny )
@@ -176,10 +174,6 @@ Grid.getTileType = Grid:makeMethod(function(self, _sprite)
     return self.grid[_sprite.gridX][_sprite.gridY].type
 end)
 
-Grid.canStartPipe = Grid:makeMethod(function(self, currTile)
-	return currTile.canStartPipe()
-end)
-
 Grid.canPipeHere = Grid:makeMethod(function(self, tile)
 	return tile:canBuildHere()
 end)
@@ -232,19 +226,13 @@ local function setSpritePipe(_sprite)
     --_sprite:setSequence(id, _sprite)
 end
 
---set the correct pipe in the grid data structure and on the sprite
+local function directionTo(tileStart, tileDestination)
+	return tileStart:directionTo(tileDestination)
+end
 
+--set the correct pipe in the grid data structure and on the sprite
 Grid.setPipe = Grid:makeMethod(function(self, currTile, prevTile)
-	local direction = pipe.NONE
-	if currTile:x() < prevTile:x() then
-		direction = pipe.LEFT
-	elseif currTile:x() > prevTile:x() then
-		direction = pipe.RIGHT
-	elseif currTile:y() < prevTile:y() then
-		direction = pipe.UP
-	elseif currTile:y() > prevTile:y() then
-		direction = pipe.DOWN
-	end
+	local direction = directionTo(prevTile,currTile)
 	
 	currTile:insert(Pipe:init())
 	currTile.actor:setIn(prevTile.actor, getOppositeDirection(direction))
@@ -312,6 +300,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 		local currTile = event.target.tile
 		
 		if event.phase == "began" then
+			print("touch begin!")
 			--print(getTileType(currTile))
 			local tileType = currTile.type
 			if currTile:isEmpty() then
@@ -361,6 +350,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				self.group.x = x
 				self.group.y = y
 			elseif self.isPiping == true then
+				print("is piping")
 				if currTile ~= self.prevTile then
 					local path = bresenhams(self.prevTile,currTile)
 					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
@@ -393,10 +383,12 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 					end
 				end
 			elseif self.isBadPiping == true then
-				--selectedTileOverlay.x = currTile.x()
-				--selectedTileOverlay.y = currTile.y()
+				print("bad pipe")
+				selectedTileOverlay.x = currTile.x()
+				selectedTileOverlay.y = currTile.y()
 			end	
 		elseif event.phase == "ended" or event.phase == "cancelled" then
+			print("touch end")
 			self.selectedTileOverlay.isVisible = false
 			self.isPiping = false
 			self.isDragging = false
@@ -513,7 +505,8 @@ end)
 
 
 Grid.createTileGroup = Grid:makeMethod(function(self)
-	self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
+	--self.group = display.newImageGroup( debugTexturesImageSheet )--self.sheet )
+	self.group = display.newGroup()--self.sheet )
 	local centerReferencePoint = false
     local topLeftReferencePoint = true
     if centerReferencePoint then

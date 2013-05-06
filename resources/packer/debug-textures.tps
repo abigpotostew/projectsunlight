@@ -136,7 +136,7 @@
             <key>innerPadding</key>
             <uint>2</uint>
             <key>extrude</key>
-            <uint>2</uint>
+            <uint>0</uint>
             <key>trimThreshold</key>
             <uint>1</uint>
             <key>trimMode</key>
@@ -162,7 +162,6 @@
             <filename>../tiles/rightstop.png</filename>
             <filename>../tiles/righttop.png</filename>
             <filename>../tiles/stone.png</filename>
-            <filename>../tiles/topstop.png</filename>
             <filename>../tiles/vertical.png</filename>
             <filename>../tiles/water.png</filename>
             <filename>../pollution-sprites/pollution_coal.png</filename>
@@ -171,6 +170,7 @@
             <filename>../pollution-sprites/pollution_solar.png</filename>
             <filename>../pollution-sprites/pollution_water.png</filename>
             <filename>../pollution-sprites/pollution_wind.png</filename>
+            <filename>../tiles/upstop.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

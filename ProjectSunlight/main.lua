@@ -6,7 +6,6 @@
 
 local util = require("src.util")
 require("mobdebug").start()
-
 print( system.getInfo( "maxTextureSize" ) )
 
 local physics = require("physics")
@@ -38,6 +37,10 @@ collision.SetGroups{"pollution", "tower", "city", "energy", "terrain", "building
 -- Widget adds some globals
 util.DeclareGlobal("sprite")
 util.DeclareGlobal("physics")
+
+local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
+
+util.DeclareGlobal("pipe")
 
 debugTexturesSheetInfo = require("data.debug-textures")
 debugTexturesImageSheet = graphics.newImageSheet( "data/debug-textures.png", debugTexturesSheetInfo:getSheet() )
@@ -77,6 +80,26 @@ local function enterFrame( event )
 end
 Runtime:addEventListener( "enterFrame", enterFrame )
 --end print FPS info
+
+
+local launchArgs = ...
+
+local function printURL( url )
+	print( url ) -- output: coronasdkapp://mycustomstring
+end
+
+if launchArgs and launchArgs.url then
+	printURL( launchArgs.url )
+end
+
+local function onSystemEvent( event )
+	if event.type == "applicationOpen" and event.url then
+		printURL( event.url )
+	end
+end
+
+Runtime:addEventListener( "system", onSystemEvent )
+
 
 io.output():setvbuf('no') -- Allows print statements to appear on iOS console output
 
