@@ -49,10 +49,11 @@ Actor.createSprite = Actor:makeMethod(function(self, animName, x, y, scaleX, sca
 	sprite.owner = self
 	sprite.x, sprite.y = x, y
 	sprite:scale(scaleX, scaleY)
-	
+	sprite.radiousSprite = nil
 	sprite.gravityScale = 0.0
 
-	self.sprite = sprite
+	--self.sprite = sprite
+	return sprite
 end)
 
 Actor.createDebugSprite = Actor:makeMethod(function(self, image, x, y, scaleX, scaleY, events)

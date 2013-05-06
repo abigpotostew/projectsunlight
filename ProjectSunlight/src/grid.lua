@@ -479,7 +479,7 @@ Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
     if self:canBuildHere(self.grid[gridX][gridY],2,2) == true then
         --BUILD IT
         local city = Building:init(Buildings.city(), gridX*tileSize, gridY*tileSize)
-        self:insert(city, gridX, gridY, city.width, city.height)
+        sprite = self:insert(city, gridX, gridY, city.width, city.height)
 		self.cityX = gridX*tileSize
 		self.cityY = gridY*tileSize
 		self.city = city
@@ -551,6 +551,20 @@ Grid.createPollution = Grid:makeMethod(function(self)
     print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
 
+Grid.createEnergy = Grid:makeMethod(function(self) 
+	local e1 = Building:init(Buildings.basic(),10*tileSize,8*tileSize,10,8)
+	e1:displayRadius()
+	--e1.radiusSprite = e1:createSprite("pollution_wind",e1.radiusX, e1.radiusY,2,2)
+	e1.radiusSprite = display.newCircle(e1.radiusX, e1.radiusY, e1.radius)
+	e1.radiusSprite.alpha = .5
+	--e1.radiusSprite.isVisible = false 
+	self.group:insert(e1.sprite)
+	self.group:insert(e1.radiusSprite)
+	
+	
+	self.group:insert(e1.radiusSprite)
+    --self:insert(Energy:init(Buildings.basic(),10*tileSize,8*tileSize),10,8)
+end)
 
 Grid.dispose = Grid:makeMethod(function(self)
 	self.group:removeSelf()
