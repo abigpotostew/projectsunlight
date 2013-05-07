@@ -530,10 +530,7 @@ Grid.createTileGroup = Grid:makeMethod(function(self)
 	
 	--This comes after creating tiles so it shows up on top of the grid
 	--This guy shows up wherever the players finger is
-	--self.selectedTileOverlay = display.newSprite(self.sheet, self.sequenceData )
 	self.selectedTileOverlay = display.newImage(debugTexturesImageSheet, debugTexturesSheetInfo:getFrameIndex("overlay") )
-	--self.selectedTileOverlay:setSequence("overlay")
-	--self.selectedTileOverlay:play()
 	self.selectedTileOverlay.alpha = .5
 	self.selectedTileOverlay.isVisible = false
 	self.group:insert(self.selectedTileOverlay)
