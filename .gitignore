@@ -17,3 +17,13 @@ log.txt
 
 ProjectSunlight-Lua
 ProjectSunlight/.project
+
+*.BACKUP.*
+
+*.BASE.*
+
+*.LOCAL.*
+
+*.REMOTE.*
+
+*.orig

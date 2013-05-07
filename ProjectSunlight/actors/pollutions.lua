@@ -9,7 +9,7 @@ Pollutions["basic"] = function()
 	local pType = pollutionType:init()
     pType.anims.normal = "pollution"
 	pType.element = "basic"
-	pType.speed = 5
+	pType.speed = 1
 	return pType
 end
 
@@ -48,7 +48,7 @@ end
 Pollutions["radiation"] = function()
 	local pType = pollutionType:init()
     pType.anims.normal = "pollution"
-	pType.speed = 5
+	pType.speed = 1
 	pType.element = "radiation"
 	return pType
 end

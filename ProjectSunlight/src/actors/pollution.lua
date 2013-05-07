@@ -21,8 +21,8 @@ Pollution:makeInit(function(class, self, pollutionType, x, y)
 		self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
 	
 		self:addPhysics()
-		
 		self.sprite.gravityScale = 0.0
+		
 		return self
 end)
 
