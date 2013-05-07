@@ -4,10 +4,9 @@
 --Go there for multitouch (pinch, zoom) once ready.
 
 local class = require "src.class"
-local actor = require("src.actors.actor")
+local Actor = require("src.actors.actor")
 local Pollution = require "src.actors.pollution"
 local pollutionType = require "src.actors.pollutionType"
-local Tile = require "src.tile"
 local Building = require "src.actors.building"
 local Buildings = require "actors.buildings"
 local Energy = require "src.actors.energy"
@@ -297,22 +296,20 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	
 	--Event listener for each tile!
 	local function tileTouchEvent( event )
-		local currTile = event.target.tile
+		local currTile = event.target
 		
 		if event.phase == "began" then
-			print("touch begin!")
-			--print(getTileType(currTile))
-			local tileType = currTile.type
-			if currTile:isEmpty() then
+			--local tileType = currTile.type
+			--if currTile:isEmpty() then
 				if(self.zoomState == IN )then
 					self.isDragging = true
-					self.group.xStart = currTile.group.x
-					self.group.yStart = currTile.group.y
+					self.group.xStart = self.group.x
+					self.group.yStart = self.group.y
 					self.group.xBegan = event.x
 					self.group.yBegan = event.y
 				end
 				--print("start scrolling")
-			elseif currTile:canStartPipe() == true then
+			--[[elseif currTile:canStartPipe() == true then
 				self.isPiping = true
 				self.startTile = currTile
 				self.prevTile = currTile
@@ -328,7 +325,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				self.selectedTileOverlay.x = currTile:x()
 				self.selectedTileOverlay.y = currTile:y()
 				--print("bad pipe!")
-			end
+			end]]
 		elseif event.phase == "moved" then
 			if self.isDragging == true then
 				local dx = event.x - self.group.xBegan
@@ -349,7 +346,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				end
 				self.group.x = x
 				self.group.y = y
-			elseif self.isPiping == true then
+			--[[elseif self.isPiping == true then
 				print("is piping")
 				if currTile ~= self.prevTile then
 					local path = bresenhams(self.prevTile,currTile)
@@ -385,10 +382,10 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			elseif self.isBadPiping == true then
 				print("bad pipe")
 				selectedTileOverlay.x = currTile.x()
-				selectedTileOverlay.y = currTile.y()
+				selectedTileOverlay.y = currTile.y()]]
 			end	
 		elseif event.phase == "ended" or event.phase == "cancelled" then
-			print("touch end")
+			--print("touch end")
 			self.selectedTileOverlay.isVisible = false
 			self.isPiping = false
 			self.isDragging = false
@@ -405,12 +402,12 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				if ( self.zoomState == IN ) then
 					--print("zooming OUT!")
 					self.zoomState = OUT
-					zoom_id = { zoom=transition.to(currTile.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
-								position=transition.to(currTile.group,{x = self.group.xMax, y=self.group.yMax, transition=easing.outQuad}) }
+					zoom_id = { zoom=transition.to(self.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
+								position=transition.to(self.group,{x = self.group.xMax, y=self.group.yMax, transition=easing.outQuad}) }
 				else
 					self.zoomState = IN
-					local targetx = -(currTile:x()+self.halfW - display.contentWidth/2)
-					local targety = -(currTile:y()+self.halfH - display.contentHeight/2)
+					local targetx = -(event.x*(1/self.zoomAmt)+self.halfW - display.contentWidth/2)
+					local targety = -(event.y*(1/self.zoomAmt)+self.halfH - display.contentHeight/2)
 					if ( targetx > self.group.xMax ) then
 						targetx = self.group.xMax
 					elseif ( targetx < self.group.xMin ) then
@@ -449,17 +446,19 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	for X = 1,gridColumns do
         self.grid[X] = {}
 		for Y = 1, gridRows do
-			self.grid[X][Y] = Tile:init(X*tileSize, Y*tileSize, X, Y)
+			self.grid[X][Y] = Actor:init()
             self.grid[X][Y].group = self.group
-			self.grid[X][Y].sprite:addEventListener( "touch", tileTouchEvent )
+            self.grid[X][Y].sprite = self.grid[X][Y]:createSprite('grass',X*tileSize, Y*tileSize)
+			--self.grid[X][Y].sprite:addEventListener( "touch", tileTouchEvent )
             self.group:insert(self.grid[X][Y].sprite)
 		end
 	end
+    self.group:addEventListener('touch', tileTouchEvent)
 end)
 
-
+--TODO:
 Grid.canBuildHere = Grid:makeMethod(function(self, tile, width, height)
-    local xStart = tile.gridX
+    --[[local xStart = tile.gridX
     local yStart = tile.gridY
     for x = xStart, xStart+width-1 do
         for y = yStart, yStart+height-1 do
@@ -468,6 +467,10 @@ Grid.canBuildHere = Grid:makeMethod(function(self, tile, width, height)
             end
         end
     end
+    return true]]
+    
+    
+    --TODO: return a collision check whether this areas is clear
     return true
 end)
 
@@ -479,27 +482,26 @@ Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
     if self:canBuildHere(self.grid[gridX][gridY],2,2) == true then
         --BUILD IT
         local city = Building:init(Buildings.city(), gridX*tileSize, gridY*tileSize)
-        sprite = self:insert(city, gridX, gridY, city.width, city.height)
+        self:insert(city)
 		self.cityX = gridX*tileSize
 		self.cityY = gridY*tileSize
 		self.city = city
     end
 end)
 
+--TODO: this should insert the sprite or actor into a level manager thing instead of here
 --assumes you've checked is these tiles are available with canBuildHere()
-Grid.insert = Grid:makeMethod(function(self, tileActor, gridX, gridY)
-    assert(tileActor, "You must provide a tile actor when inserting an actor, ya doofus!")
-    assert(gridX, "You must provide a gridX postion when inserting a tile actor!")
-    assert(gridY, "You must provide a gridY postion when inserting a tile actor!")
-    local width = tileActor.width or 1
+Grid.insert = Grid:makeMethod(function(self, actor)
+    assert(actor, "You must provide an actor when inserting an actor, ya doofus!")
+    --[[local width = tileActor.width or 1
     local height = tileActor.height or 1
     
     for x = gridX, gridX+width-1 do
         for y = gridY, gridY+height-1 do
             self.grid[x][y]:insert(tileActor)
         end
-    end
-    self.group:insert(tileActor.sprite)
+    end]]
+    self.group:insert(actor.sprite)
 end)
 
 

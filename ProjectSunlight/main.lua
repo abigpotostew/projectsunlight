@@ -57,12 +57,7 @@ local screen = require("src.screen")
 
 local gamestate = require "src.gamestate"
 
---create our grid
-local Grid = require("src.grid")
-local grid = Grid:init()
--- DON'T DO IT!!! --
-grid:createPollution()
-grid:createEnergy()
+
 
 --print FPS info
 local prevTime = system.getTimer()

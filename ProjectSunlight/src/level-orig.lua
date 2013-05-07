@@ -23,15 +23,9 @@ local path = require "src.path"
 
 local vector2 = require "src.vector2"
 
-local Grid = require("src.grid")
-
 collision.SetGroups{"bird", "ammo", "ammoExplosion", "ground", "hut"}
 
-
-
 local Level = class:makeSubclass("Level")
-
-
 
 -------------------------------------------------------------------------------
 -- Constructor
@@ -219,13 +213,6 @@ end)
 Level.createScene = Level:makeMethod(function(self, event)
 	--All variables used in createScene are set in the level*.lua files.
 	print("Level:CreateScene")
-    
-    --create our grid
-    
-    local grid = Grid:init()
-    -- DON'T DO IT!!! --
-    --grid:createPollution()
-    --grid:createEnergy()
 
 	self.aspect = display.contentHeight / display.contentWidth
 	self.height = self.width * self.aspect
@@ -246,17 +233,17 @@ Level.createScene = Level:makeMethod(function(self, event)
 	physics.pause()
 
 	-- Load ammo
-	--self.ammoType:load()
+	self.ammoType:load()
 
 	-- Load birds
-	--for _, birdType in pairs(self.birdTypes) do
-	--	birdType:load()
-	--end
+	for _, birdType in pairs(self.birdTypes) do
+		birdType:load()
+	end
 
 	-- Load huts
-	--for hutType, _ in pairs(self.hutTypes) do
-	--	hutType:load()
-	--end
+	for hutType, _ in pairs(self.hutTypes) do
+		hutType:load()
+	end
 
 	-- Add scenery (also, the background has the touch listener that fires ammo)
 	self:AddBackground()

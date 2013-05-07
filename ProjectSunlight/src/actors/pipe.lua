@@ -1,8 +1,8 @@
 -- Pipe 
 
-local tileActor = require "src.actors.tileActor"
+local actor = require "src.actors.actor"
 
-local Pipe = tileActor:makeSubclass("Pipe")
+local Pipe = actor:makeSubclass("Pipe")
 
 local IN = 0
 local OUT = 1

@@ -1,8 +1,8 @@
 -- Building.lua
 -- A generic building class, will probably be extended into energy, tower, and cities
 
-local tileActor = require "src.actors.tileActor"
-local Building = tileActor:makeSubclass("Building")
+local actor = require "src.actors.actor"
+local Building = actor:makeSubclass("Building")
 local Physics = require( "physics" )
 
 Building:makeInit(function(class, self, buildingType, x, y)
