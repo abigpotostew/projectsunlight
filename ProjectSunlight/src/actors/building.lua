@@ -28,6 +28,7 @@ end)
 Building.displayRadius = Building:makeMethod(function(self)
 		
 	self.radiusSprite = display.newCircle(self.radiusX, self.radiusY, self.radius)
+	self.radiusSprite.typeName = "radius"
 	self.radiusSprite.alpha = .5
 	Physics.addBody ( self.radiusSprite, { isSensor = true } )
 	--local radiusSprite = self:createSprite("pollution_wind",self.radiusX, self.radiusY,2,2)
@@ -45,14 +46,51 @@ end)
 
 Building.addCollision = Building:makeMethod(function(self)
 	function onCollision( event )
-        if ( event.phase == "began" ) then
+		--local other = event.other
+		--local otherName = other.typeName
+		--local otherOwner = other.owner
+		--if (event.phase ~= "ended") then
+		--	event.object1 = self.radiusSprite
+		--	print (event.object1.typeName)
+		--	return
+		--end
+        
+		event.object1 = self.radiusSprite
+		print (event.object1.typeName)
+		
+		if ( event.phase == "began" and event.object1.typeName == "radius" ) then
+			print ("Collision - self name: " .. event.object1.typeName)
 			self.radiusSprite:setFillColor(222,128,128)
-        end
+        elseif otherName then
+		print("unknown named object: " .. event.object2.typeName)
+		end
 	end
 	
 	Runtime:addEventListener( "collision", onCollision )
 	--self.collision = onCollision
 	--self.collision:addEventListener( "collision", e1 )
+end)
+
+Building.collision = Building:makeMethod(function(self, event)
+
+	if (event.phase ~= "ended") then
+		return
+	end
+
+	local other = event.other
+	local otherName = other.typeName
+	local otherOwner = other.owner
+
+	if (otherOwner ~= nil) then
+		otherName = otherOwner.typeName
+	end
+
+	if (otherName == "pollution") then
+		self.radiusSprite:setFillColor(222,128,128)
+		otherOwner:OnBirdHit(self)
+	elseif otherName then
+		print("unknown named object: " .. otherName)
+	end
 end)
 
 return Building
