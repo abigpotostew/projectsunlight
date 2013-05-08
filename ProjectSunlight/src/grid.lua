@@ -14,7 +14,7 @@ local Pollutions = require "actors.pollutions"
 local Pipe = require "src.actors.pipe"
 local Touch = require "src.touch"
 local Vector2 = require "src.vector2"
-
+local Util = require "src.util"
 
 local Grid = class:makeSubclass("Grid")
 
@@ -606,13 +606,23 @@ Grid.dispose = Grid:makeMethod(function(self)
 	self.grid = nil
 end)
 
+-----------------------------------------------------
+-- Convert touch coordinates to in game position
+-- returns vector2
+-----------------------------------------------------
 Grid.unproject = Grid:makeMethod(function(self, screenX, screenY)
-    --print('grid: ['..self.group.x..', '..self.group.y..']')
+	assert(screenX and screenY,'Please provide coordinates to unproject')
     local targetx = (screenX*(1/self.group.xScale) - self.group.x + self.group.xMax)
     local targety = (screenY*(1/self.group.yScale) - self.group.y + self.group.xMax)
     return Vector2:init(targetx,targety)
 end)
 
+Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
+	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
+	local mid = endVec + (-startVec) / 2 + startVec
+	local angle = Util.RadToDeg(endVec:angle(startVec))
+	self:insert(Pipe:init(mid.x,mid.y,angle))
+end)
+
 return Grid
 --end grid stuff
-

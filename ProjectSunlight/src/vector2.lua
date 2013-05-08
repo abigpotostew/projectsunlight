@@ -111,4 +111,9 @@ Vector2.normalized = Vector2:makeMethod(function(self)
 	return self / mag, mag
 end)
 
+Vector2.angle = Vector2:makeMethod(function(self, other)
+	assert(isVector2Equivalent(other), "Can't perform Vector2 angle on dissimilar object of type " .. type(other))
+	return math.atan2(other.y-self.y,other.x-self.x)
+end)
+
 return Vector2

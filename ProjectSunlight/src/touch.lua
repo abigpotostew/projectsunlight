@@ -31,14 +31,17 @@ function Touch:energyTouchEvent( )
 		display.getCurrentStage():setFocus( t )
         t.isFocus = true
     elseif event.phase == "moved" then
-        --print("move energy touch "..event.x..", "..event.y)
-        local target = a.grid:unproject(event.x , event.y)
-        --print('unproject:'..tostring(target))
-        target = target + Vector2:init(-a:x(),-a:y())
-       -- print('target!:'..tostring(target))
+        local touchPos = a.grid:unproject(event.x , event.y)
+		local energyPos = Vector2:init(a:x(),a:y())
+        local target = touchPos + -energyPos
         local dist = target:length()
         if(dist>=a.pipeLength)then
-            print(dist)
+            --print(dist)
+			--Create a pipe here!
+			a.grid:spawnPipe(Vector2:init(a:x(),a:y()),target,a)
+			display.getCurrentStage():setFocus(nil)
+			t.isFocus = false
+			return false
         end
     elseif event.phase == "ended" or event.phase == "cancelled" then
         --print("end energy touch")

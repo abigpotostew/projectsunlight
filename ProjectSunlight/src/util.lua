@@ -81,6 +81,10 @@ function Util.DegToRad(degrees)
 	return degrees * math.pi / 180.0
 end
 
+function Util.RadToDeg(radians)
+	return radians*180.0/math.pi
+end
+
 function Util.RemoveAtEnd(event)
 	if event.phase =="end" then
 		timer.performWithDelay(1, function() event.target:removeSelf() end)

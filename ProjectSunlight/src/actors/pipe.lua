@@ -10,9 +10,9 @@ local OUT = 1
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
 
-Pipe:makeInit(function(class, self)
+Pipe:makeInit(function(class, self, x, y, angleDeg)
     --assert(tile,"You must initialize this pipe with a tile in the constructor!")
-    class.super:initWith(self, 1, 1)--pipes are 1x1 by default
+    class.super:initWith(self)--pipes are 1x1 by default
     
     self.typeName = "pipe"
 	self.startConnection = nil -- could be energy source or something
@@ -22,6 +22,10 @@ Pipe:makeInit(function(class, self)
     self.Id = nil --pipe id
     --self.group = group --grid adds the new pipe sprite to group
     --self.tile = tile
+	
+	self.sprite = self:createSprite('pipe',x,y)
+	self.sprite.rotation = angleDeg
+	self.sprite.actor = self
     return self
 end)
 
@@ -45,18 +49,6 @@ Pipe.setOut = Pipe:makeMethod(function(self, other, direction)
 	--do end connection checks here
 end)
 
-Pipe.setSprite = Pipe:makeMethod(function(self)
-    
-	--local group = self.group --group is initialized in this pipe's constructor
-	if self.sprite then
-        self.sprite:removeSelf()
-        self.sprite = nil
-    end
-	self.sprite = self:createSprite(id,self.tile:x(),self.tile:y())
-    self.sprite.actor = self
-	--group:insert(self.sprite)
-    --self.createSprite(id, )-- = debugTexturesSheetInfo:getFrameIndex(id)
-end)
 
 Pipe.canContinuePipe = Pipe:makeMethod(function(self)
     return ( self.In ~= nil  and self.Out == nil )
