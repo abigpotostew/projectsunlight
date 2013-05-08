@@ -31,6 +31,7 @@ Actor:makeInit(function(class, self, actorType)
 	self.sheet = debugTexturesImageSheet
     
     self.group = nil
+    self.grid = nil -- associated grid that this actor is in
 
 	return self
 end)
@@ -175,6 +176,16 @@ Actor.GetState = Actor:makeMethod(function(self)
 	else
 		return nil
 	end
+end)
+
+Actor.x = Actor:makeMethod(function(self)
+    assert(self.sprite,"Sprite mustn't be null when accessing x position")
+    return self.sprite.x
+end)
+
+Actor.y = Actor:makeMethod(function(self)
+    assert(self.sprite,"Sprite mustn't be null when accessing y position")
+    return self.sprite.y
 end)
 
 return Actor

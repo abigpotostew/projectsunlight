@@ -12,8 +12,12 @@ local Buildings = require "actors.buildings"
 local Energy = require "src.actors.energy"
 local Pollutions = require "actors.pollutions"
 local Pipe = require "src.actors.pipe"
+local Touch = require "src.touch"
+local Vector2 = require "src.vector2"
+
 
 local Grid = class:makeSubclass("Grid")
+
 
 local tileSize = 64
 local tileWidth = tileSize --we have square tiles
@@ -41,6 +45,8 @@ Grid:makeInit(function(class, self)
 	
 	--finger drag tile
 	self.selectedTileOverlay = nil
+    
+    self.pipeOverlay = nil
 	
     --must initially be set to 0, just cus!
     self.pipeCount = 0
@@ -441,8 +447,9 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 	end
 	
 	
-    
-    --create grid sprites!!
+    ----------------------------------
+    -- Create grid sprites!!
+    ----------------------------------
 	for X = 1,gridColumns do
         self.grid[X] = {}
 		for Y = 1, gridRows do
@@ -453,6 +460,11 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
             self.group:insert(self.grid[X][Y].sprite)
 		end
 	end
+    
+    ----------------------------------
+    -- Set grid touch listener here!
+    ----------------------------------
+
     self.group:addEventListener('touch', tileTouchEvent)
 end)
 
@@ -502,6 +514,8 @@ Grid.insert = Grid:makeMethod(function(self, actor)
         end
     end]]
     self.group:insert(actor.sprite)
+    actor.group = self.group
+    actor.grid = self
 end)
 
 
@@ -521,6 +535,9 @@ Grid.createTileGroup = Grid:makeMethod(function(self)
         self.group.xMax = self.halfW -tileWidth --this gives a slightly black border 32px wide
         self.group.yMax =  self.halfH -tileHeight --ditto
     end
+    
+    print('min:'..self.group.xMin..', '..self.group.yMin)
+    print('max:'..self.group.xMax..', '..self.group.yMax)
 	
 	local x = self.group.xMin --self.halfW-tileWidth
 	local y = self.group.yMin --self.halfH-tileHeight
@@ -531,12 +548,15 @@ Grid.createTileGroup = Grid:makeMethod(function(self)
 	
 	--This comes after creating tiles so it shows up on top of the grid
 	--This guy shows up wherever the players finger is
-	self.selectedTileOverlay = display.newImage(debugTexturesImageSheet, debugTexturesSheetInfo:getFrameIndex("overlay") )
+	self.selectedTileOverlay = display.newImage(
+        debugTexturesImageSheet, 
+        debugTexturesSheetInfo:getFrameIndex("overlay") )
 	self.selectedTileOverlay.alpha = .5
 	self.selectedTileOverlay.isVisible = false
 	self.group:insert(self.selectedTileOverlay)
     self.selectedTileOverlay:setReferencePoint( display.TopLeftReferencePoint)
 	
+    
 end)
 
 Grid.createPollution = Grid:makeMethod(function(self) 
@@ -545,7 +565,11 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	p1:setTarget(self.cityX,self.cityY)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
-    self:insert(Energy:init(Buildings.basic(),10*tileSize,2*tileSize),10,2)
+    local energyBasic = Energy:init(Buildings.basic(),10*tileSize,2*tileSize)
+    self:insert(energyBasic,10,2)
+    
+    energyBasic:addListener(energyBasic.sprite, "touch", Touch.energyTouchEvent)
+    
     print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
 
@@ -574,13 +598,19 @@ Grid.dispose = Grid:makeMethod(function(self)
 	
 	for i = 1, gridColumns do
         for j = 1, gridRows do
-            self.grid[i][j].sprite:removeSelf()
-			self.grid[i][j].sprite = nil
+            self.grid[i][j]:removeSelf()
 			self.grid[i][j] = nil
         end
 		self.grid[i] = nil
     end
 	self.grid = nil
+end)
+
+Grid.unproject = Grid:makeMethod(function(self, screenX, screenY)
+    --print('grid: ['..self.group.x..', '..self.group.y..']')
+    local targetx = (screenX*(1/self.group.xScale) - self.group.x + self.group.xMax)
+    local targety = (screenY*(1/self.group.yScale) - self.group.y + self.group.xMax)
+    return Vector2:init(targetx,targety)
 end)
 
 return Grid

@@ -220,12 +220,9 @@ Level.createScene = Level:makeMethod(function(self, event)
 	--All variables used in createScene are set in the level*.lua files.
 	print("Level:CreateScene")
     
-    --create our grid
-    
-    local grid = Grid:init()
-    -- DON'T DO IT!!! --
-    --grid:createPollution()
-    --grid:createEnergy()
+    --------------------------------
+    -- Spawn grid here!
+    --------------------------------
 
 	self.aspect = display.contentHeight / display.contentWidth
 	self.height = self.width * self.aspect

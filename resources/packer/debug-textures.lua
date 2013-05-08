@@ -1,7 +1,7 @@
 --
 -- created with TexturePacker (http://www.codeandweb.com/texturepacker)
 --
--- $TexturePacker:SmartUpdate:e51e4fd056eb9e76739fef02bef32056$
+-- $TexturePacker:SmartUpdate:7f11a15ba1c26e45c84a54a25354b585$
 --
 -- local sheetInfo = require("mysheet")
 -- local myImageSheet = graphics.newImageSheet( "mysheet.png", sheetInfo:getSheet() )
@@ -16,15 +16,15 @@ SheetInfo.sheet =
     
         {
             -- badpipe
-            x=142,
-            y=352,
+            x=2,
+            y=416,
             width=68,
             height=68,
 
         },
         {
             -- city
-            x=2,
+            x=213,
             y=2,
             width=132,
             height=132,
@@ -32,15 +32,15 @@ SheetInfo.sheet =
         },
         {
             -- downstop
-            x=142,
-            y=282,
+            x=2,
+            y=346,
             width=68,
             height=68,
 
         },
         {
             -- energy
-            x=142,
+            x=422,
             y=212,
             width=68,
             height=68,
@@ -48,88 +48,96 @@ SheetInfo.sheet =
         },
         {
             -- grass
-            x=142,
-            y=142,
+            x=352,
+            y=212,
             width=68,
             height=68,
 
         },
         {
             -- horizontal
-            x=422,
-            y=72,
+            x=212,
+            y=276,
             width=68,
             height=68,
 
         },
         {
             -- leftdown
-            x=352,
-            y=72,
+            x=282,
+            y=212,
             width=68,
             height=68,
 
         },
         {
             -- leftstop
-            x=282,
-            y=72,
+            x=142,
+            y=211,
             width=68,
             height=68,
 
         },
         {
             -- lefttop
-            x=212,
-            y=72,
+            x=72,
+            y=211,
             width=68,
             height=68,
 
         },
         {
             -- overlay
-            x=142,
-            y=72,
+            x=2,
+            y=211,
             width=68,
             height=68,
 
         },
         {
-            -- pollution
-            x=416,
+            -- pipe
+            x=2,
             y=2,
+            width=209,
+            height=67,
+
+        },
+        {
+            -- pollution
+            x=422,
+            y=142,
             width=68,
             height=68,
 
         },
         {
             -- pollution_coal
-            x=346,
-            y=2,
+            x=352,
+            y=142,
             width=68,
             height=68,
 
         },
         {
             -- pollution_geothermal
-            x=276,
-            y=2,
+            x=212,
+            y=206,
             width=68,
             height=68,
 
         },
         {
             -- pollution_nuclear
-            x=206,
-            y=2,
+            x=282,
+            y=142,
             width=68,
             height=68,
 
         },
         {
             -- pollution_solar
-            x=72,
-            y=416,
+            x=142,
+            y=141,
             width=68,
             height=68,
 
@@ -137,31 +145,31 @@ SheetInfo.sheet =
         {
             -- pollution_water
             x=72,
-            y=346,
+            y=141,
             width=68,
             height=68,
 
         },
         {
             -- pollution_wind
-            x=72,
-            y=276,
+            x=2,
+            y=141,
             width=68,
             height=68,
 
         },
         {
             -- rightdown
-            x=72,
-            y=206,
+            x=212,
+            y=136,
             width=68,
             height=68,
 
         },
         {
             -- rightstop
-            x=136,
-            y=2,
+            x=142,
+            y=71,
             width=68,
             height=68,
 
@@ -169,7 +177,7 @@ SheetInfo.sheet =
         {
             -- righttop
             x=72,
-            y=136,
+            y=71,
             width=68,
             height=68,
 
@@ -177,39 +185,39 @@ SheetInfo.sheet =
         {
             -- stone
             x=2,
-            y=416,
+            y=71,
             width=68,
             height=68,
 
         },
         {
             -- tower
-            x=2,
-            y=346,
+            x=417,
+            y=72,
             width=68,
             height=68,
 
         },
         {
             -- upstop
-            x=2,
-            y=276,
+            x=347,
+            y=72,
             width=68,
             height=68,
 
         },
         {
             -- vertical
-            x=2,
-            y=206,
+            x=417,
+            y=2,
             width=68,
             height=68,
 
         },
         {
             -- water
-            x=2,
-            y=136,
+            x=347,
+            y=2,
             width=68,
             height=68,
 
@@ -233,21 +241,22 @@ SheetInfo.frameIndex =
     ["leftstop"] = 8,
     ["lefttop"] = 9,
     ["overlay"] = 10,
-    ["pollution"] = 11,
-    ["pollution_coal"] = 12,
-    ["pollution_geothermal"] = 13,
-    ["pollution_nuclear"] = 14,
-    ["pollution_solar"] = 15,
-    ["pollution_water"] = 16,
-    ["pollution_wind"] = 17,
-    ["rightdown"] = 18,
-    ["rightstop"] = 19,
-    ["righttop"] = 20,
-    ["stone"] = 21,
-    ["tower"] = 22,
-    ["upstop"] = 23,
-    ["vertical"] = 24,
-    ["water"] = 25,
+    ["pipe"] = 11,
+    ["pollution"] = 12,
+    ["pollution_coal"] = 13,
+    ["pollution_geothermal"] = 14,
+    ["pollution_nuclear"] = 15,
+    ["pollution_solar"] = 16,
+    ["pollution_water"] = 17,
+    ["pollution_wind"] = 18,
+    ["rightdown"] = 19,
+    ["rightstop"] = 20,
+    ["righttop"] = 21,
+    ["stone"] = 22,
+    ["tower"] = 23,
+    ["upstop"] = 24,
+    ["vertical"] = 25,
+    ["water"] = 26,
 }
 
 function SheetInfo:getSheet()

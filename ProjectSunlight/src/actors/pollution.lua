@@ -19,7 +19,7 @@ Pollution:makeInit(function(class, self, pollutionType, x, y)
 		self.hitCount = 10
 		
 		self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
-	
+        self.sprite.actor = self
 		self:addPhysics()
 		self.sprite.gravityScale = 0.0
 		

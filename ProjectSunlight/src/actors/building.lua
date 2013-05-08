@@ -5,6 +5,8 @@ local actor = require "src.actors.actor"
 local Building = actor:makeSubclass("Building")
 local Physics = require( "physics" )
 
+local Touch = require "src.touch"
+
 Building:makeInit(function(class, self, buildingType, x, y)
     class.super:initWith(self)
     
@@ -19,8 +21,13 @@ Building:makeInit(function(class, self, buildingType, x, y)
     --Doesn't have much yet, but will have events and health and whatever.
 	--self.radiusSprite = nil
     self.sprite = self:createSprite(self.typeInfo.anims.normal,x+(self.width/2*64),y+(self.height/2*64))
+    self.sprite.actor = self
     self:addPhysics()
 	
+    self.pipeOverlay = nil
+    
+    
+    self.pipeLength = 100
 	
     return self
 end)
@@ -92,5 +99,7 @@ Building.collision = Building:makeMethod(function(self, event)
 		print("unknown named object: " .. otherName)
 	end
 end)
+
+
 
 return Building
