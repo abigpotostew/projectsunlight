@@ -408,8 +408,13 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				if ( self.zoomState == IN ) then
 					--print("zooming OUT!")
 					self.zoomState = OUT
-					zoom_id = { zoom=transition.to(self.group,{xScale = self.zoomAmt, yScale=self.zoomAmt, transition=easing.outQuad, onComplete=zoomingListener}),
-								position=transition.to(self.group,{x = self.group.xMax, y=self.group.yMax, transition=easing.outQuad}) }
+					zoom_id = { zoom=transition.to(self.group,{xScale = self.zoomAmt, 
+															   yScale=self.zoomAmt, 
+															   transition=easing.outQuad, 
+															   onComplete=zoomingListener}),
+								position=transition.to(self.group,{x = self.group.xMax,
+																   y=self.group.yMax,
+																   transition=easing.outQuad}) }
 				else
 					self.zoomState = IN
 					local targetx = -(event.x*(1/self.zoomAmt)+self.halfW - display.contentWidth/2)
@@ -450,12 +455,15 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
     ----------------------------------
     -- Create grid sprites!!
     ----------------------------------
+	
+	local startX = -tileWidth/2
+	local startY = -tileHeight/2
 	for X = 1,gridColumns do
         self.grid[X] = {}
 		for Y = 1, gridRows do
 			self.grid[X][Y] = Actor:init()
             self.grid[X][Y].group = self.group
-            self.grid[X][Y].sprite = self.grid[X][Y]:createSprite('grass',X*tileSize, Y*tileSize)
+            self.grid[X][Y].sprite = self.grid[X][Y]:createSprite('grass',X*tileSize+startX, Y*tileSize+startY)
 			--self.grid[X][Y].sprite:addEventListener( "touch", tileTouchEvent )
             self.group:insert(self.grid[X][Y].sprite)
 		end
@@ -522,29 +530,23 @@ end)
 
 Grid.createTileGroup = Grid:makeMethod(function(self)
 	self.group = display.newGroup( ) --debugTexturesImageSheet )--self.sheet )
-	local centerReferencePoint = false
-    local topLeftReferencePoint = true
-    if centerReferencePoint then
-        self.group.xMin = -display.contentWidth  - tileWidth -- -self.halfW
-        self.group.yMin = -display.contentHeight  - tileHeight -- -self.halfH
-        self.group.xMax = 0 --self.halfW*2 -tileWidth --
-        self.group.yMax =  0 --self.halfH*2 -tileHeight --
-    elseif topLeftReferencePoint then
-        self.group.xMin = -display.contentWidth  -self.halfW- tileWidth -- 
-        self.group.yMin = -display.contentHeight -self.halfH - tileHeight -- 
-        self.group.xMax = self.halfW -tileWidth --this gives a slightly black border 32px wide
-        self.group.yMax =  self.halfH -tileHeight --ditto
-    end
+
+	self.group.xMin = -display.contentWidth
+	self.group.yMin = -display.contentHeight
+	self.group.xMax = 0
+	self.group.yMax =  0
+	-- Groups are top left reference point by default
     
     print('min:'..self.group.xMin..', '..self.group.yMin)
     print('max:'..self.group.xMax..', '..self.group.yMax)
 	
-	local x = self.group.xMin --self.halfW-tileWidth
-	local y = self.group.yMin --self.halfH-tileHeight
-	self.group.x = self.group.xMax
-	self.group.y = self.group.yMax
+	----------------------------------
+    -- Camera starting point
+    ----------------------------------
+	self.group.x = 0
+	self.group.y = 0
 	
-	self:createTiles( x, y, self.group.xMax, self.group.yMax, self.group )
+	self:createTiles( self.group.xMin, self.group.yMin, self.group.xMax, self.group.yMax, self.group )
 	
 	--This comes after creating tiles so it shows up on top of the grid
 	--This guy shows up wherever the players finger is
@@ -565,8 +567,11 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	p1:setTarget(self.cityX,self.cityY)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
+	
     local energyBasic = Energy:init(Buildings.basic(),10*tileSize,2*tileSize)
     self:insert(energyBasic,10,2)
+	--local circlePos = display.newCircle(energyBasic:x(),energyBasic:y(),2)
+	--self.group:insert(circlePos)
     
     energyBasic:addListener(energyBasic.sprite, "touch", Touch.energyTouchEvent)
     
@@ -619,9 +624,21 @@ end)
 
 Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
 	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
-	local mid = endVec + (-startVec) / 2 + startVec
-	local angle = Util.RadToDeg(endVec:angle(startVec))
-	self:insert(Pipe:init(mid.x,mid.y,angle))
+	--TODO: endVec should be shortened to be the length of the pipe
+	local targetLocal = endVec + -startVec
+	local mid = targetLocal / 2 
+	mid = mid + startVec
+	local angle = endVec:angle(startVec)
+	angle = Util.RadToDeg(angle)
+	local pipe = Pipe:init(mid.x,mid.y,angle)
+	self:insert(pipe)
+	
+	pipe.inPos = startVec --start is the in direction
+	pipe.outPos = endVec 	 --end is the out direction
+	
+	pipe:addListener(pipe.sprite, "touch", Touch.pipeTouchEvent)
+	
+	return pipe
 end)
 
 return Grid

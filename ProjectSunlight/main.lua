@@ -78,6 +78,7 @@ local function enterFrame( event )
 	if ( (curTime - fps.prevTime ) > 100 ) then
 		-- limit how often fps updates
 		fps.text = string.format( '%.2f', 1000 / dt )
+		--print(string.format("<%8.02f, %8.02f>", grid.group.x ,grid.group.y))
 	end
 end
 Runtime:addEventListener( "enterFrame", enterFrame )
@@ -101,6 +102,8 @@ local function onSystemEvent( event )
 end
 
 Runtime:addEventListener( "system", onSystemEvent )
+
+
 
 
 io.output():setvbuf('no') -- Allows print statements to appear on iOS console output

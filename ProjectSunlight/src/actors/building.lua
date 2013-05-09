@@ -16,18 +16,19 @@ Building:makeInit(function(class, self, buildingType, x, y)
     self.width = buildingType.width
     self.height = buildingType.height
 	self.radius = buildingType.radius
-	self.radiusX = x+(self.width/2*64)+32
-	self.radiusY = y+(self.height/2*64)+32
+	self.radiusX = x
+	self.radiusY = y
     --Doesn't have much yet, but will have events and health and whatever.
 	--self.radiusSprite = nil
-    self.sprite = self:createSprite(self.typeInfo.anims.normal,x+(self.width/2*64),y+(self.height/2*64))
+    self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
     self.sprite.actor = self
     self:addPhysics()
 	
     self.pipeOverlay = nil
     
-    
+    --Not sure of a good place to put this, right now it's also in pipe
     self.pipeLength = 100
+	self.pipeLength2 = self.pipeLength*self.pipeLength
 	
     return self
 end)

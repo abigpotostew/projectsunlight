@@ -23,9 +23,16 @@ Pipe:makeInit(function(class, self, x, y, angleDeg)
     --self.group = group --grid adds the new pipe sprite to group
     --self.tile = tile
 	
-	self.sprite = self:createSprite('pipe',x,y)
-	self.sprite.rotation = angleDeg
+	self.sprite = self:createSprite('pipe100',x,y)
+	self.sprite.rotation = angleDeg+180 -- Add 180 so the ball part of the pipe is at end of the pipe
 	self.sprite.actor = self
+	
+	self.inPos = nil --beginning pos of the pipe, the SOURCE
+	self.outPos = nil -- end position of pipe where it may connect to a tower or another pipe
+	
+	self.pipeLength = 100
+	self.pipeLength2 = self.pipeLength*self.pipeLength
+	
     return self
 end)
 

@@ -106,6 +106,10 @@ Vector2.length = Vector2:makeMethod(function(self)
 	return math.sqrt(self:dot(self))
 end)
 
+Vector2.length2 = Vector2:makeMethod(function(self)
+	return self:dot(self)
+end)
+
 Vector2.normalized = Vector2:makeMethod(function(self)
 	local mag = self:length()
 	return self / mag, mag

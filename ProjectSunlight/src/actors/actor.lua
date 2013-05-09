@@ -9,6 +9,7 @@ local class = require "src.class"
 local util = require "src.util"
 local collision = require "src.collision"
 local physics = require 'physics'
+local Vector2 = require 'src.vector2'
 
 local Actor = class:makeSubclass("Actor")
 
@@ -46,14 +47,16 @@ Actor.createSprite = Actor:makeMethod(function(self, animName, x, y, scaleX, sca
 	--local sprite = spSprite.init(self.typeInfo.animSet, animName, events)
 	local sprite = display.newImage( debugTexturesImageSheet , debugTexturesSheetInfo:getFrameIndex(animName))
 	--self.sheet, self.sequenceData
-    sprite:setReferencePoint( display.TopLeftReferencePoint )
+    --sprite:setReferencePoint( display.TopLeftReferencePoint )
+	sprite:setReferencePoint(display.CenterReferencePoint) --center by default
 	sprite.owner = self
 	sprite.x, sprite.y = x, y
 	sprite:scale(scaleX, scaleY)
 	sprite.radiousSprite = nil
 	sprite.gravityScale = 0.0
 
-	--self.sprite = sprite
+	
+	
 	return sprite
 end)
 
@@ -186,6 +189,11 @@ end)
 Actor.y = Actor:makeMethod(function(self)
     assert(self.sprite,"Sprite mustn't be null when accessing y position")
     return self.sprite.y
+end)
+
+Actor.pos = Actor:makeMethod(function(self)
+	assert(self.sprite,"Sprite mustn't be null when accessing pos")
+	return Vector2:init(self:x(),self:y())
 end)
 
 return Actor
