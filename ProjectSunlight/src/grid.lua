@@ -65,7 +65,7 @@ Grid:makeInit(function(class, self)
 
     self.grid = {} --a 2D array of pipe informations
 
-	
+	self.selectedPipeOverlay = nil --hovering clear pipe visible when dragging pipe
     
     self.sheetData = { 
         width=tileWidth,
@@ -511,8 +511,9 @@ end)
 
 --TODO: this should insert the sprite or actor into a level manager thing instead of here
 --assumes you've checked is these tiles are available with canBuildHere()
-Grid.insert = Grid:makeMethod(function(self, actor)
+Grid.insert = Grid:makeMethod(function(self, actor, insertIndex)
     assert(actor, "You must provide an actor when inserting an actor, ya doofus!")
+    
     --[[local width = tileActor.width or 1
     local height = tileActor.height or 1
     
@@ -521,7 +522,11 @@ Grid.insert = Grid:makeMethod(function(self, actor)
             self.grid[x][y]:insert(tileActor)
         end
     end]]
-    self.group:insert(actor.sprite)
+    if insertIndex then
+        self.group:insert(insertIndex, actor.sprite)
+    else
+        self.group:insert(actor.sprite)
+    end
     actor.group = self.group
     actor.grid = self
 end)
@@ -569,7 +574,7 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	self.group:insert(p1.sprite)
 	
     local energyBasic = Energy:init(Buildings.basic(),10*tileSize,2*tileSize)
-    self:insert(energyBasic,10,2)
+    self:insert(energyBasic)
 	--local circlePos = display.newCircle(energyBasic:x(),energyBasic:y(),2)
 	--self.group:insert(circlePos)
     
@@ -624,17 +629,17 @@ end)
 
 Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
 	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
-	--TODO: endVec should be shortened to be the length of the pipe
 	local targetLocal = endVec + -startVec
-	local mid = targetLocal / 2 
-	mid = mid + startVec
+    --TODO: 90 should be a variable!!
+    local endPt = (targetLocal:copy()):normalized()*(90)
+	local mid = startVec:mid(endVec)
 	local angle = endVec:angle(startVec)
 	angle = Util.RadToDeg(angle)
 	local pipe = Pipe:init(mid.x,mid.y,angle)
-	self:insert(pipe)
+	self:insert(pipe, self.group.numChildren)
 	
 	pipe.inPos = startVec --start is the in direction
-	pipe.outPos = endVec 	 --end is the out direction
+	pipe.outPos = endPt+startVec 	 --end is the out direction
 	
 	pipe:addListener(pipe.sprite, "touch", Touch.pipeTouchEvent)
 	

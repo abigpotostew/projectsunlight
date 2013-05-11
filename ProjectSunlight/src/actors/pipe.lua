@@ -32,6 +32,9 @@ Pipe:makeInit(function(class, self, x, y, angleDeg)
 	
 	self.pipeLength = 100
 	self.pipeLength2 = self.pipeLength*self.pipeLength
+    self.pipeInset = 13
+    
+    
 	
     return self
 end)

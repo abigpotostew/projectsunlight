@@ -37,8 +37,9 @@ function Touch:energyTouchEvent( )
         local target = touchPos + -energyPos --get the direction vector from energy
         local dist2 = target:length2() -- use squared dist for optimization
         if (dist2>=a.pipeLength2) then
+            target = target:normalized()*a.pipeLength + energyPos
 			--Create a pipe here!
-			local pipe = a.grid:spawnPipe(energyPos, touchPos, a)
+			local pipe = a.grid:spawnPipe(energyPos, target, a)
 			display.getCurrentStage():setFocus(nil)
 			t.isFocus = false
 			display.getCurrentStage():setFocus(pipe.sprite)
@@ -63,18 +64,22 @@ function Touch:pipeTouchEvent (  )
     local event = self
 	local t = event.target -- the sprite involved
     local pipe = t.actor --the pipe involved in touch
+    local selectedPipeOverlay = pipe.selectedPipeOverlay
     if event.phase == "began" then
         display.getCurrentStage():setFocus( t )
 		t.isFocus = true
     elseif event.phase == "moved" then
-        local touchPos = pipe.grid:unproject(event.x , event.y) -- get in world touch position
-		
+        -- get in world touch position
+        local touchPos = pipe.grid:unproject(event.x , event.y) 
 		local outPos = pipe.outPos
         local target = touchPos + -outPos
         local dist2 = target:length2() 
         if (dist2>=pipe.pipeLength2) then
 			--Create a pipe here!
-			local newPipe = pipe.grid:spawnPipe(outPos, touchPos, pipe)
+            target = target:normalized()
+            target = target * pipe.pipeLength
+            target = target + outPos
+			local newPipe = pipe.grid:spawnPipe(outPos, target, pipe)
 			display.getCurrentStage():setFocus(nil)
 			t.isFocus = false
 			display.getCurrentStage():setFocus(newPipe.sprite)
