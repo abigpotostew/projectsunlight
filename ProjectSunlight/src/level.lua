@@ -5,9 +5,6 @@ local storyboard = require "storyboard"
 local math = require "math"
 
 local fps = require "src.libs.fps"
-local spAnimInfo = require "src.libs.swiftping.sp_animinfo"
-local spAnimSet = require "src.libs.swiftping.sp_animset"
-local spSprite = require "src.libs.swiftping.sp_sprite"
 
 local util = require"src.util"
 local gamestate = require "src.gamestate"
@@ -39,7 +36,6 @@ local Level = class:makeSubclass("Level")
 Level:makeInit(function(class, self)
 	class.super:initWith(self)
 
-	self.trajectories = {}
 	self.birdTypes = {}
 	self.hutTypes = {}
 	self.timeline = {}
@@ -61,9 +57,9 @@ Level:makeInit(function(class, self)
 	return self
 end)
 
+
 -------------------------------------------------------------------------------
 -- Ground
-
 Level.AddGround = Level:makeMethod(function(self)
 	local width, height = self:GetWorldViewSize()
 	local ground = display.newRect(0, 0, width, 22)
@@ -144,9 +140,9 @@ function Level:touch(event)
 end
 
 
+
 -------------------------------------------------------------------------------
 -- Background
-
 Level.AddBackground = Level:makeMethod(function(self)
 	local width, height = self:GetWorldViewSize()
 	local background = display.newImageRect(self.background, width, height)
