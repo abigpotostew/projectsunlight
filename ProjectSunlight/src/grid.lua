@@ -104,9 +104,9 @@ Grid:makeInit(function(class, self)
     local nx = 2
     local ny = 2
     self:createTileGroup( nx, ny )
-
     --until multitouch zoom is implemented, just zoom out all the way.
     self.group:scale(1,1)
+	self.pollutionGroup = display.newGroup( )
 
     --Initialize the grid
     --[[for i = 1, gridColumns do
@@ -539,10 +539,11 @@ end)
 
 Grid.createPollution = Grid:makeMethod(function(self) 
 	 --CREATE SOME TOWERS & ENERGY SOURCES HERE
-	local p1 = Pollution:init(Pollutions.radiation(),10*tileSize,8*tileSize,10,8)
+	local p1 = Pollution:init(Pollutions.radiation(),0,0,0,0)
 	p1:setTarget(self.cityX,self.cityY)
 	p1:setDirection()
 	self.group:insert(p1.sprite)
+	self.pollutionGroup:insert(p1.sprite)
     self:insert(Energy:init(Buildings.basic(),10*tileSize,2*tileSize),10,2)
     print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
@@ -551,7 +552,7 @@ Grid.createEnergy = Grid:makeMethod(function(self)
 	local e1 = Building:init(Buildings.basic(),10*tileSize,8*tileSize,10,8)
 	--e1.radiusSprite = e1:createSprite("pollution_wind",e1.radiusX, e1.radiusY,2,2)
 	e1:displayRadius()
-	e1:addCollision()
+	e1:addCollision(self.pollutionGroup)
 	--e1:collision()
 	--e1.radiusSprite.isVisible = false 
 	self.group:insert(e1.sprite)

@@ -44,28 +44,26 @@ Building.displayRadius = Building:makeMethod(function(self)
 	--self.radiusSprite = radiusSprite
 end)
 
-Building.addCollision = Building:makeMethod(function(self)
+Building.addCollision = Building:makeMethod(function(self, _group)
 	function onCollision( event )
-		--local other = event.other
-		--local otherName = other.typeName
-		--local otherOwner = other.owner
-		--if (event.phase ~= "ended") then
-		--	event.object1 = self.radiusSprite
-		--	print (event.object1.typeName)
-		--	return
-		--end
-        
-		event.object1 = self.radiusSprite
-		print (event.object1.typeName)
+        for i = 1,_group.numChildren do
+			event.object1 = self.radiusSprite
+			event.object2 = _group[i].actor
+			print (event.object1.typeName)
+			print (event.object2.typeName)
 		
-		if ( event.phase == "began" and event.object1.typeName == "radius" ) then
-			print ("Collision - self name: " .. event.object1.typeName)
-			self.radiusSprite:setFillColor(222,128,128)
-        elseif otherName then
-		print("unknown named object: " .. event.object2.typeName)
+			if ( event.phase == "began") then
+				print ("Collision - " .. event.object1.typeName .. " - with - " .. event.object2.typeName)
+				self.radiusSprite:setFillColor(222,128,128)
+			elseif otherName then
+			print("unknown named object: " .. event.object2.typeName)
+			end
+		
+			if (event.phase == "ended" ) then
+				self.radiusSprite:setFillColor(255,0,128)
+			end
 		end
 	end
-	
 	Runtime:addEventListener( "collision", onCollision )
 	--self.collision = onCollision
 	--self.collision:addEventListener( "collision", e1 )
