@@ -171,6 +171,8 @@
             <filename>../pollution-sprites/pollution_water.png</filename>
             <filename>../pollution-sprites/pollution_wind.png</filename>
             <filename>../tiles/upstop.png</filename>
+            <filename>../pipe.png</filename>
+            <filename>../pipe100.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
