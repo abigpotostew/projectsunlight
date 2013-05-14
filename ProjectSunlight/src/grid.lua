@@ -65,38 +65,6 @@ Grid:makeInit(function(class, self)
 
     self.grid = {} --a 2D array of pipe informations
 
-	
-    
-    self.sheetData = { 
-        width=tileWidth,
-        height=tileHeight,
-        numFrames=16,
-        sheetContentWidth=tileSheetWidth,
-        sheetContentHeight=tileSheetHeight
-	}
-    self.sheet = graphics.newImageSheet( "data/tiles.png", self.sheetData ) --load the actual spritesheet
-
-    --each tile can be any one of these tiles
-    --use spite:setSequence("FRAME NAME") to swap out the animation
-    self.sequenceData = {
-        {name="wood", start=1, count = 1,time=0},
-        {name="grass", start=2, count = 1,time=0},
-        {name="horz", start=3, count = 1,time=0},
-        {name="leftdown", start=4, count = 1,time=0},
-        {name="rightdown", start=5, count = 1,time=0},
-        {name="stone", start=6, count = 1,time=0},
-        {name="leftup", start=7, count = 1,time=0},
-        {name="rightup", start=8, count = 1,time=0},
-        {name="vert", start=9, count = 1,time=0},
-        {name="water", start=10, count = 1,time=0},
-        {name="overlay", start=11, count = 1,time=0},
-        {name="leftstop", start=12, count = 1,time=0},
-        {name="rightstop", start=13, count = 1,time=0},
-        {name="upstop", start=14, count = 1,time=0},
-        {name="downstop", start=15, count = 1,time=0},
-        {name="badpipe", start=16, count = 1,time=0}
-    }
-
     self.w = tileSize
     self.h = tileSize
     self.halfW = self.w*0.5
@@ -113,14 +81,7 @@ Grid:makeInit(function(class, self)
     --until multitouch zoom is implemented, just zoom out all the way.
     self.group:scale(1,1)
 
-    --Initialize the grid
-    --[[for i = 1, gridColumns do
-        self.grid[i] = {}
-        for j = 1, gridRows do
-            self.grid[i][j] = Tile:init(i*tileSize, j*tileSize, i, j)
-            self.grid[i][j].group = self.group
-        end
-    end]]
+	
 
     --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 	
@@ -620,6 +581,26 @@ Grid.unproject = Grid:makeMethod(function(self, screenX, screenY)
     local targetx = (screenX*(1/self.group.xScale) - self.group.x + self.group.xMax)
     local targety = (screenY*(1/self.group.yScale) - self.group.y + self.group.xMax)
     return Vector2:init(targetx,targety)
+end)
+
+Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec)
+	assert(startVec and touchVec, 'Please provide start and touch vectors')
+	
+	local targetLocal = endVec + -startVec
+	local mid = targetLocal / 2 
+	mid = mid + startVec
+	local angle = endVec:angle(startVec)
+	angle = Util.RadToDeg(angle)
+	local pipe = Pipe:init(mid.x,mid.y,angle)
+	self:insert(pipe)
+	
+	pipe.inPos = startVec --start is the in direction
+	pipe.outPos = endVec 	 --end is the out direction
+	
+end)
+
+Grid.clearDragPipe = Grid:makeMethod(function(self)
+	
 end)
 
 Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
