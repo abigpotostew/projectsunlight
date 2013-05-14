@@ -59,6 +59,19 @@ Pipe.setOut = Pipe:makeMethod(function(self, other, direction)
 	--do end connection checks here
 end)
 
+----------------------------------
+-- returns all In connection data
+----------------------------------
+Pipe.getIn = Pipe:makeMethod(function(self)
+	return self.In, self.startConnection
+end)
+
+----------------------------------
+-- returns all Out connection data
+----------------------------------
+Pipe.getOut = Pipe:makeMethod(function(self)
+	return self.Out, self.endConnection
+end)
 
 Pipe.canContinuePipe = Pipe:makeMethod(function(self)
     return ( self.In ~= nil  and self.Out == nil )
