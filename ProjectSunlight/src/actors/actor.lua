@@ -196,4 +196,11 @@ Actor.pos = Actor:makeMethod(function(self)
 	return Vector2:init(self:x(),self:y())
 end)
 
+Actor.dispose = Actor:makeMethod(function(self)
+	if self.sprite then
+		self.sprite:removeSelf()
+		self.sprite = nil
+	end
+end)
+
 return Actor

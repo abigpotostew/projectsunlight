@@ -120,4 +120,13 @@ Vector2.angle = Vector2:makeMethod(function(self, other)
 	return math.atan2(other.y-self.y,other.x-self.x)
 end)
 
+Vector2.copy = Vector2:makeMethod(function(self, other)
+    return Vector2:init(self.x,self.y)
+end)
+
+--get the midpoint between two vectors!!
+Vector2.mid = Vector2:makeMethod(function(self, other)
+    return ((other + -self)/2)+self
+end)
+
 return Vector2

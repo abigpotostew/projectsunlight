@@ -65,38 +65,6 @@ Grid:makeInit(function(class, self)
 
     self.grid = {} --a 2D array of pipe informations
 
-	
-    
-    self.sheetData = { 
-        width=tileWidth,
-        height=tileHeight,
-        numFrames=16,
-        sheetContentWidth=tileSheetWidth,
-        sheetContentHeight=tileSheetHeight
-	}
-    self.sheet = graphics.newImageSheet( "data/tiles.png", self.sheetData ) --load the actual spritesheet
-
-    --each tile can be any one of these tiles
-    --use spite:setSequence("FRAME NAME") to swap out the animation
-    self.sequenceData = {
-        {name="wood", start=1, count = 1,time=0},
-        {name="grass", start=2, count = 1,time=0},
-        {name="horz", start=3, count = 1,time=0},
-        {name="leftdown", start=4, count = 1,time=0},
-        {name="rightdown", start=5, count = 1,time=0},
-        {name="stone", start=6, count = 1,time=0},
-        {name="leftup", start=7, count = 1,time=0},
-        {name="rightup", start=8, count = 1,time=0},
-        {name="vert", start=9, count = 1,time=0},
-        {name="water", start=10, count = 1,time=0},
-        {name="overlay", start=11, count = 1,time=0},
-        {name="leftstop", start=12, count = 1,time=0},
-        {name="rightstop", start=13, count = 1,time=0},
-        {name="upstop", start=14, count = 1,time=0},
-        {name="downstop", start=15, count = 1,time=0},
-        {name="badpipe", start=16, count = 1,time=0}
-    }
-
     self.w = tileSize
     self.h = tileSize
     self.halfW = self.w*0.5
@@ -113,14 +81,7 @@ Grid:makeInit(function(class, self)
     self.group:scale(1,1)
 	self.pollutionGroup = display.newGroup( )
 
-    --Initialize the grid
-    --[[for i = 1, gridColumns do
-        self.grid[i] = {}
-        for j = 1, gridRows do
-            self.grid[i][j] = Tile:init(i*tileSize, j*tileSize, i, j)
-            self.grid[i][j].group = self.group
-        end
-    end]]
+	
 
     --self.informationText = display.newText( "Tile At Selected Grid Position Is: ", 40, 10,  native.systemFontBold, 16 )
 	
@@ -511,8 +472,9 @@ end)
 
 --TODO: this should insert the sprite or actor into a level manager thing instead of here
 --assumes you've checked is these tiles are available with canBuildHere()
-Grid.insert = Grid:makeMethod(function(self, actor)
+Grid.insert = Grid:makeMethod(function(self, actor, insertIndex)
     assert(actor, "You must provide an actor when inserting an actor, ya doofus!")
+    
     --[[local width = tileActor.width or 1
     local height = tileActor.height or 1
     
@@ -521,7 +483,11 @@ Grid.insert = Grid:makeMethod(function(self, actor)
             self.grid[x][y]:insert(tileActor)
         end
     end]]
-    self.group:insert(actor.sprite)
+    if insertIndex then
+        self.group:insert(insertIndex, actor.sprite)
+    else
+        self.group:insert(actor.sprite)
+    end
     actor.group = self.group
     actor.grid = self
 end)
@@ -569,7 +535,7 @@ Grid.createPollution = Grid:makeMethod(function(self)
 	self.group:insert(p1.sprite)
 	
     local energyBasic = Energy:init(Buildings.basic(),10*tileSize,2*tileSize)
-    self:insert(energyBasic,10,2)
+    self:insert(energyBasic)
 	--local circlePos = display.newCircle(energyBasic:x(),energyBasic:y(),2)
 	--self.group:insert(circlePos)
     
@@ -622,9 +588,9 @@ Grid.unproject = Grid:makeMethod(function(self, screenX, screenY)
     return Vector2:init(targetx,targety)
 end)
 
-Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
-	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
-	--TODO: endVec should be shortened to be the length of the pipe
+Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec)
+	assert(startVec and touchVec, 'Please provide start and touch vectors')
+	
 	local targetLocal = endVec + -startVec
 	local mid = targetLocal / 2 
 	mid = mid + startVec
@@ -635,6 +601,26 @@ Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
 	
 	pipe.inPos = startVec --start is the in direction
 	pipe.outPos = endVec 	 --end is the out direction
+	
+end)
+
+Grid.clearDragPipe = Grid:makeMethod(function(self)
+	
+end)
+
+Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
+	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
+	local targetLocal = endVec + -startVec
+    --TODO: 90 should be a variable!!
+    local endPt = (targetLocal:copy()):normalized()*(90)
+	local mid = startVec:mid(endVec)
+	local angle = endVec:angle(startVec)
+	angle = Util.RadToDeg(angle)
+	local pipe = Pipe:init(mid.x,mid.y,angle)
+	self:insert(pipe, self.group.numChildren)
+	
+	pipe.inPos = startVec --start is the in direction
+	pipe.outPos = endPt+startVec 	 --end is the out direction
 	
 	pipe:addListener(pipe.sprite, "touch", Touch.pipeTouchEvent)
 	

@@ -37,8 +37,9 @@ function Touch:energyTouchEvent( )
         local target = touchPos + -energyPos --get the direction vector from energy
         local dist2 = target:length2() -- use squared dist for optimization
         if (dist2>=a.pipeLength2) then
+            target = target:normalized()*a.pipeLength + energyPos
 			--Create a pipe here!
-			local pipe = a.grid:spawnPipe(energyPos, touchPos, a)
+			local pipe = a.grid:spawnPipe(energyPos, target, a)
 			display.getCurrentStage():setFocus(nil)
 			t.isFocus = false
 			display.getCurrentStage():setFocus(pipe.sprite)
@@ -63,29 +64,52 @@ function Touch:pipeTouchEvent (  )
     local event = self
 	local t = event.target -- the sprite involved
     local pipe = t.actor --the pipe involved in touch
+    local selectedPipeOverlay = pipe.selectedPipeOverlay
     if event.phase == "began" then
-        display.getCurrentStage():setFocus( t )
-		t.isFocus = true
-    elseif event.phase == "moved" then
-        local touchPos = pipe.grid:unproject(event.x , event.y) -- get in world touch position
-		
-		local outPos = pipe.outPos
-        local target = touchPos + -outPos
-        local dist2 = target:length2() 
-        if (dist2>=pipe.pipeLength2) then
-			--Create a pipe here!
-			local newPipe = pipe.grid:spawnPipe(outPos, touchPos, pipe)
-			display.getCurrentStage():setFocus(nil)
-			t.isFocus = false
-			display.getCurrentStage():setFocus(newPipe.sprite)
-			newPipe.sprite.isFocus = true
-			
-			newPipe.In = pipe
-			pipe.Out = newPipe
-			
+		if pipe:canContinuePipe() then
+			display.getCurrentStage():setFocus( t )
+			t.isFocus = true
+		else
 			return false
-        else
-			-- erasing pipes goes here
+		end
+    elseif event.phase == "moved" then
+        -- get in world touch position
+        local touchPos = pipe.grid:unproject(event.x , event.y) 
+		
+		--Calculate distance to remove this pipe segment
+		local inPos = pipe.inPos
+		local targetIn = touchPos + -inPos
+		local distIn2 = targetIn:length2()
+		if (distIn2 <= pipe.pipeLength2/16) then
+			--erase the pipe
+			t.isFocus = false
+			display.getCurrentStage():setFocus( pipe.In.sprite )
+			if pipe.In.sprite then pipe.In.sprite.isFocus = true end
+			if pipe.startConnection then
+				--The start connection is the source of this pipe's energy here
+			end
+			pipe:dispose()
+		else
+			--Calculate dist to start a new pipe segment
+			local outPos = pipe.outPos
+			local targetOut = touchPos + -outPos
+			local distOut2 = targetOut:length2() 
+			if (distOut2>=pipe.pipeLength2) then
+				--Create a pipe here!
+				targetOut = targetOut:normalized()
+				targetOut = targetOut * pipe.pipeLength
+				targetOut = targetOut + outPos
+				local newPipe = pipe.grid:spawnPipe(outPos, targetOut, pipe)
+				display.getCurrentStage():setFocus(nil)
+				t.isFocus = false
+				display.getCurrentStage():setFocus(newPipe.sprite)
+				newPipe.sprite.isFocus = true
+				
+				newPipe.In = pipe
+				pipe.Out = newPipe
+				
+				return false
+			end
 		end
     elseif event.phase == "ended" or event.phase == "cancelled" then
         display.getCurrentStage():setFocus( nil )
