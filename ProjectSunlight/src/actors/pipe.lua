@@ -30,9 +30,9 @@ Pipe:makeInit(function(class, self, x, y, angleDeg)
 	self.inPos = nil --beginning pos of the pipe, the SOURCE
 	self.outPos = nil -- end position of pipe where it may connect to a tower or another pipe
 	
-	self.pipeLength = 100
-	self.pipeLength2 = self.pipeLength*self.pipeLength
-    self.pipeInset = 13
+	--self.pipeLength = 100
+	--self.pipeLength2 = self.pipeLength*self.pipeLength
+    --self.pipeInset = 13
     
     
 	

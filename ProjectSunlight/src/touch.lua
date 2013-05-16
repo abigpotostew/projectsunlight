@@ -36,8 +36,8 @@ function Touch:energyTouchEvent( )
 		local energyPos = a:pos() --get center position of energy tower
         local target = touchPos + -energyPos --get the direction vector from energy
         local dist2 = target:length2() -- use squared dist for optimization
-        if (dist2>=a.pipeLength2) then
-            target = target:normalized()*a.pipeLength + energyPos
+        if (dist2>=sun.pipeLength2) then
+            target = target:normalized()*sun.pipeLength + energyPos
 			--Create a pipe here!
 			local pipe = a.grid:spawnPipe(energyPos, target, a)
 			display.getCurrentStage():setFocus(nil)
@@ -60,7 +60,7 @@ end
 ----------------------------------
 -- Pipe touch event
 ----------------------------------
-function Touch:pipeTouchEvent (  )
+function Touch:pipeTouchEvent( )
     local event = self
 	local t = event.target -- the sprite involved
     local pipe = t.actor --the pipe involved in touch
@@ -80,7 +80,7 @@ function Touch:pipeTouchEvent (  )
 		local inPos = pipe.inPos
 		local targetIn = touchPos + -inPos
 		local distIn2 = targetIn:length2()
-		if (distIn2 <= pipe.pipeLength2/16) then
+		if (distIn2 <= sun.pipeLength2*sun.removePipeTouchDistance2) then
 			--erase the pipe
 			t.isFocus = false
 			display.getCurrentStage():setFocus( pipe.In.sprite )
@@ -94,10 +94,10 @@ function Touch:pipeTouchEvent (  )
 			local outPos = pipe.outPos
 			local targetOut = touchPos + -outPos
 			local distOut2 = targetOut:length2() 
-			if (distOut2>=pipe.pipeLength2) then
+			if (distOut2>=sun.pipeLength2) then
 				--Create a pipe here!
 				targetOut = targetOut:normalized()
-				targetOut = targetOut * pipe.pipeLength
+				targetOut = targetOut * sun.pipeLength
 				targetOut = targetOut + outPos
 				local newPipe = pipe.grid:spawnPipe(outPos, targetOut, pipe)
 				display.getCurrentStage():setFocus(nil)
@@ -114,6 +114,21 @@ function Touch:pipeTouchEvent (  )
     elseif event.phase == "ended" or event.phase == "cancelled" then
         display.getCurrentStage():setFocus( nil )
 		pipe.isFocus = false
+    end
+    return true --important
+end
+
+----------------------------------
+-- Touch Template
+----------------------------------
+function Touch:cityTouch()
+    local event = self
+    if event.phase == "began" then
+       
+    elseif event.phase == "moved" then
+        
+    elseif event.phase == "ended" or event.phase == "cancelled" then
+        
     end
     return true --important
 end

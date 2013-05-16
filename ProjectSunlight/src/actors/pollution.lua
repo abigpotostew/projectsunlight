@@ -4,26 +4,26 @@ local Vector2 = require ("src.vector2")
 local Pollution = actor:makeSubclass("Pollution")
 
 Pollution:makeInit(function(class, self, pollutionType, x, y)
-		class.super:initWith(self, pollutionType)
+	class.super:initWith(self, pollutionType)
+	
+	self.typeInfo = pollutionType
+	
+	self.typeName = "pollution"
 		
-		self.typeInfo = pollutionType
+	self.myVector = Vector2:init(x, y) -- creates a vector holding the x and y positions 
 		
-        self.typeName = "pollution"
-       		
-		self.myVector = Vector2:init(x, y) -- creates a vector holding the x and y positions 
-			
-		self.target = nil
-		
-		self.speed = pollutionType.speed
-		
-		self.hitCount = 10
-		
-		self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
-        self.sprite.actor = self
-		self:addPhysics()
-		self.sprite.gravityScale = 0.0
-		
-		return self
+	self.target = nil
+	
+	self.speed = pollutionType.speed
+	
+	self.hitCount = 10
+	
+	self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
+	self.sprite.actor = self
+	self:addPhysics()
+	self.sprite.gravityScale = 0.0
+	
+	return self
 end)
 
 Pollution.setTarget = Pollution:makeMethod(function(self, x, y)

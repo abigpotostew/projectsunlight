@@ -590,29 +590,44 @@ end)
 
 Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec)
 	assert(startVec and touchVec, 'Please provide start and touch vectors')
-	
+	if self.pipeOverlay then
+		self.pipeOverlay.isVisible = true
+		physics.removeBody(self.pipeOverlay)
+	end
+	--self.pipeOverlay
 	local targetLocal = endVec + -startVec
 	local mid = targetLocal / 2 
 	mid = mid + startVec
 	local angle = endVec:angle(startVec)
-	angle = Util.RadToDeg(angle)
-	local pipe = Pipe:init(mid.x,mid.y,angle)
-	self:insert(pipe)
+	self.pipeOverlay.x = mid.x
+	self.pipeOverlay.y = mid.y
 	
-	pipe.inPos = startVec --start is the in direction
-	pipe.outPos = endVec 	 --end is the out direction
+	
+	
+	--physics.addBody(self.pipeOverlay,
+		
+		
+	--angle = Util.RadToDeg(angle)
+	--local pipe = Pipe:init(mid.x,mid.y,angle)
+	--self:insert(pipe)
+	
+	--pipe.inPos = startVec --start is the in direction
+	--pipe.outPos = endVec 	 --end is the out direction
 	
 end)
 
 Grid.clearDragPipe = Grid:makeMethod(function(self)
-	
+	if self.pipeOverlay then
+		physics.removeBody(self.pipeOverlay)
+		self.pipeOverlay.isVisible = false
+	end
 end)
 
 Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
 	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
 	local targetLocal = endVec + -startVec
     --TODO: 90 should be a variable!!
-    local endPt = (targetLocal:copy()):normalized()*(90)
+    local endPt = (targetLocal:copy()):normalized()*sun.newPipeDistance
 	local mid = startVec:mid(endVec)
 	local angle = endVec:angle(startVec)
 	angle = Util.RadToDeg(angle)
