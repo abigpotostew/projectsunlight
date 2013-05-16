@@ -4,6 +4,8 @@
 --			  Kevin Otoshi
 --			  Stewart Bracken
 
+sun = require 'src.sun'
+
 local util = require("src.util")
 require("mobdebug").start()
 print( system.getInfo( "maxTextureSize" ) )
@@ -41,7 +43,7 @@ util.DeclareGlobal("sprite")
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
-util.DeclareGlobal("pipe")
+--util.DeclareGlobal("pipe")
 
 debugTexturesSheetInfo = require("data.debug-textures")
 debugTexturesImageSheet = graphics.newImageSheet( "data/debug-textures.png", debugTexturesSheetInfo:getSheet() )

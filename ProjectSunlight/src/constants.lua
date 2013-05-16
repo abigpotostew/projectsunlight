@@ -1,5 +1,4 @@
 
-
 local function protect_table (tbl)
   return setmetatable ({}, 
     {

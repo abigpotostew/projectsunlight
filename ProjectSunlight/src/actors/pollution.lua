@@ -4,7 +4,11 @@ local Vector2 = require ("src.vector2")
 local Pollution = actor:makeSubclass("Pollution")
 
 Pollution:makeInit(function(class, self, pollutionType, x, y)
-		class.super:initWith(self, pollutionType)
+	class.super:initWith(self, pollutionType)
+	
+	self.typeInfo = pollutionType
+	
+	self.typeName = "pollution"
 		
 		self.typeName = "pollution"
 		self.typeInfo = pollutionType 
