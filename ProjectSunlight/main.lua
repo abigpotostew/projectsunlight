@@ -11,6 +11,7 @@ print( system.getInfo( "maxTextureSize" ) )
 local physics = require("physics")
 physics.start()
 physics.setGravity(0.0,0.0)
+physics.setDrawMode("hybrid")
 --physics.setDrawMode("debug")
 
 local collision = require("src.collision")
@@ -36,7 +37,7 @@ collision.SetGroups{"pollution", "tower", "city", "energy", "terrain", "building
 -- Some globals set by various corona modules
 -- Widget adds some globals
 util.DeclareGlobal("sprite")
-util.DeclareGlobal("physics")
+--util.DeclareGlobal("physics")
 
 local pipe = {NONE = -1, LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3}
 
@@ -63,7 +64,7 @@ local Grid = require("src.grid")
 local grid = Grid:init()
 -- DON'T DO IT!!! --
 grid:createPollution()
---grid:createEnergy()
+grid:createEnergy()
 
 --print FPS info
 local prevTime = system.getTimer()
@@ -102,9 +103,6 @@ local function onSystemEvent( event )
 end
 
 Runtime:addEventListener( "system", onSystemEvent )
-
-
-
 
 io.output():setvbuf('no') -- Allows print statements to appear on iOS console output
 

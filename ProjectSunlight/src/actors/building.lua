@@ -3,7 +3,7 @@
 
 local actor = require "src.actors.actor"
 local Building = actor:makeSubclass("Building")
-local Physics = require( "physics" )
+--local Physics = require( "physics" )
 
 local Touch = require "src.touch"
 
@@ -11,7 +11,7 @@ Building:makeInit(function(class, self, buildingType, x, y)
     class.super:initWith(self)
     
 	self.collision = nil
-    self.typeName = "building"
+    self.typeName = buildingType.typeName or "building"
     self.typeInfo = buildingType
     self.width = buildingType.width
     self.height = buildingType.height
@@ -23,6 +23,9 @@ Building:makeInit(function(class, self, buildingType, x, y)
     self.sprite = self:createSprite(self.typeInfo.anims.normal,x,y)
     self.sprite.actor = self
     self:addPhysics()
+	
+	--self.sprite.collision = function(self, event) self:collision(self, event) end
+	--self.sprite:addEventListener("collision", self)
 	
     self.pipeOverlay = nil
     
@@ -36,9 +39,10 @@ end)
 Building.displayRadius = Building:makeMethod(function(self)
 		
 	self.radiusSprite = display.newCircle(self.radiusX, self.radiusY, self.radius)
-	self.radiusSprite.typeName = "radius"
+	self.radiusSprite.typeName = self.typeName
 	self.radiusSprite.alpha = .5
-	Physics.addBody ( self.radiusSprite, { isSensor = true } )
+	physics.addBody ( self.radiusSprite, { isSensor = true, radius = self.radius} )
+	
 	--local radiusSprite = self:createSprite("pollution_wind",self.radiusX, self.radiusY,2,2)
 	--name, color, visible
     --energyRadius = display.newCircle(self.radiusX, self.radiusY, self.radius)

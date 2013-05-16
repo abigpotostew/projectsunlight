@@ -88,7 +88,6 @@ Grid:makeInit(function(class, self)
 	self.cityX = -1 --The city position X
 	self.cityY = -1 -- The city position Y
     self:buildCity()
-    
 	self._timers = {}
 	self._listeners = {}
 
@@ -463,7 +462,9 @@ Grid.buildCity = Grid:makeMethod(function(self, gridX, gridY)
     if self:canBuildHere(self.grid[gridX][gridY],2,2) == true then
         --BUILD IT
         local city = Building:init(Buildings.city(), gridX*tileSize, gridY*tileSize)
+		city:displayRadius()
         self:insert(city)
+		self.group:insert(city.radiusSprite)
 		self.cityX = gridX*tileSize
 		self.cityY = gridY*tileSize
 		self.city = city
@@ -529,26 +530,27 @@ end)
 
 Grid.createPollution = Grid:makeMethod(function(self) 
 	 --CREATE SOME TOWERS & ENERGY SOURCES HERE
-	local p1 = Pollution:init(Pollutions.radiation(),10*tileSize,8*tileSize,10,8)
+	local p1 = Pollution:init(Pollutions.radiation(),0,0)
 	p1:setTarget(self.cityX,self.cityY)
 	p1:setDirection()
+	p1:addSensor()
 	self.group:insert(p1.sprite)
 	
-    local energyBasic = Energy:init(Buildings.basic(),10*tileSize,2*tileSize)
+    local energyBasic = Energy:init(Buildings.coal(),10*tileSize,2*tileSize)
     self:insert(energyBasic)
 	--local circlePos = display.newCircle(energyBasic:x(),energyBasic:y(),2)
 	--self.group:insert(circlePos)
     
     energyBasic:addListener(energyBasic.sprite, "touch", Touch.energyTouchEvent)
     
-    print("Hey I just finished creating pollution for you. No problem, don't worry about it.")
+    print("Line: 546 - Hey I just finished creating pollution for you. No problem, don't worry about it.")
 end)
 
 Grid.createEnergy = Grid:makeMethod(function(self) 
-	local e1 = Building:init(Buildings.basic(),10*tileSize,8*tileSize,10,8)
-	--e1.radiusSprite = e1:createSprite("pollution_wind",e1.radiusX, e1.radiusY,2,2)
+	local e1 = Building:init(Buildings.tower(),10*tileSize,8*tileSize,10,8)
+	--xe1.radiusSprite = e1:createSprite("pollution_wind",e1.radiusX, e1.radiusY,2,2)
 	e1:displayRadius()
-	e1:addCollision(self.pollutionGroup)
+	--e1:addCollision(self.pollutionGroup)
 	--e1:collision()
 	--e1.radiusSprite.isVisible = false 
 	self.group:insert(e1.sprite)

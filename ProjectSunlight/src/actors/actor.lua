@@ -111,9 +111,9 @@ Actor.addPhysics = Actor:makeMethod(function(self, data)
 		density = 1, --we don't care about density
 		friction = data.friction or self.typeInfo.physics.friction,
 		bounce = data.bounce or self.typeInfo.physics.bounce,
-		filter = collision.MakeFilter(data.category or self.typeInfo.physics.category,
-			data.colliders or self.typeInfo.physics.colliders),
-		isSensor = self.typeInfo.physics.isSensor or false,
+		--filter = collision.MakeFilter(data.category or self.typeInfo.physics.category,
+		--	data.colliders or self.typeInfo.physics.colliders),
+		isSensor = self.typeInfo.physics.isSensor or true,
 	}
 
 	physics.addBody(self.sprite, phys)
