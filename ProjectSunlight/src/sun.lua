@@ -10,7 +10,8 @@ local Sun = {
 	pipeInset 					= 13,
 	newPipeDistance 			= 90,
 	removePipeTouchDistance2 	= 1/16,
-	
+	pipeRotationOffset			= 180, 		--So pipe is oriented correctly
+	doubleTapTime				= 500,
 	
 	
 	}

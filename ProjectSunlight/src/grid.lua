@@ -359,7 +359,7 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 			self.isBadPiping = false
 			self.currentPipe = -1
 			--double tap speed == 500
-			if ( system.getTimer() - self.doubleTapMark < 500 ) then
+			if ( system.getTimer() - self.doubleTapMark < sun.doubleTapTime ) then
 				--print("double tap!!")
 				if ( zoom_id ) then
 					transition.cancel(zoom_id.zoom)
@@ -592,54 +592,50 @@ end)
 
 Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec)
 	assert(startVec and touchVec, 'Please provide start and touch vectors')
-	if self.pipeOverlay then
-		self.pipeOverlay.isVisible = true
-		physics.removeBody(self.pipeOverlay)
+	local p = self.pipeOverlay
+	if p then
+		local targetLocal = touchVec + -startVec
+		local scale = targetLocal:length()/sun.pipeLength
+		local mid = startVec:mid(touchVec)
+		local angle = touchVec:angle(startVec)
+		angle = Util.RadToDeg(angle)
+		p.sprite.xScale = scale
+		p.sprite.x = mid.x
+		p.sprite.y = mid.y
+		p.sprite.rotation = angle+sun.pipeRotationOffset
+		p.sprite.alpha = scale
+	else
+		self.pipeOverlay = self:spawnPipe(startVec,touchVec,nil,nil,Touch.null)
+		self.pipeOverlay.sprite.alpha = 0.0
+		self.pipeOverlay.sprite.xScale = 0.01
 	end
-	--self.pipeOverlay
-	local targetLocal = endVec + -startVec
-	local mid = targetLocal / 2 
-	mid = mid + startVec
-	local angle = endVec:angle(startVec)
-	self.pipeOverlay.x = mid.x
-	self.pipeOverlay.y = mid.y
-	
-	
-	
-	--physics.addBody(self.pipeOverlay,
-		
-		
-	--angle = Util.RadToDeg(angle)
-	--local pipe = Pipe:init(mid.x,mid.y,angle)
-	--self:insert(pipe)
-	
-	--pipe.inPos = startVec --start is the in direction
-	--pipe.outPos = endVec 	 --end is the out direction
-	
 end)
 
+--Called after a pipe is built
 Grid.clearDragPipe = Grid:makeMethod(function(self)
 	if self.pipeOverlay then
-		physics.removeBody(self.pipeOverlay)
-		self.pipeOverlay.isVisible = false
+		self.pipeOverlay:removeSelf()
+		self.pipeOverlay = nil
 	end
 end)
 
-Grid.spawnPipe = Grid:makeMethod(function(self,startVec,endVec,actorIn,actorOut)
-	assert(startVec and endVec and actorIn, 'Please provide start, end, and actor in')
+Grid.spawnPipe = Grid:makeMethod(function(self,startVec, endVec,actorIn, actorOut, event)
+	assert(startVec and endVec, 'Please provide start and end vector')
 	local targetLocal = endVec + -startVec
     --TODO: 90 should be a variable!!
     local endPt = (targetLocal:copy()):normalized()*sun.newPipeDistance
 	local mid = startVec:mid(endVec)
 	local angle = endVec:angle(startVec)
 	angle = Util.RadToDeg(angle)
+	--spawn the pipe actor
 	local pipe = Pipe:init(mid.x,mid.y,angle)
+	--insert pipe into group
 	self:insert(pipe, self.group.numChildren)
 	
 	pipe.inPos = startVec --start is the in direction
 	pipe.outPos = endPt+startVec 	 --end is the out direction
-	
-	pipe:addListener(pipe.sprite, "touch", Touch.pipeTouchEvent)
+	local e = event or Touch.pipeTouchEvent
+	pipe:addListener(pipe.sprite, "touch", e)
 	
 	return pipe
 end)

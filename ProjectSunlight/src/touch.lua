@@ -19,6 +19,13 @@ function Touch:touchTemplate()
 end
 
 ----------------------------------
+-- Do nothing!
+----------------------------------
+function Touch:null()
+    return true --important
+end
+
+----------------------------------
 -- Energy Src touch event!
 ----------------------------------
 function Touch:energyTouchEvent( )
@@ -29,16 +36,19 @@ function Touch:energyTouchEvent( )
     if event.phase == "began" then
         --local parent = t.parent
         --parent:insert( t ) --not
+		a.grid:setDragPipe(a:pos(),a.grid:unproject(event.x , event.y))
 		display.getCurrentStage():setFocus( t )
         t.isFocus = true
     elseif event.phase == "moved" then
         local touchPos = a.grid:unproject(event.x , event.y) -- get in world touch position
 		local energyPos = a:pos() --get center position of energy tower
+		a.grid:setDragPipe(energyPos,touchPos)
         local target = touchPos + -energyPos --get the direction vector from energy
         local dist2 = target:length2() -- use squared dist for optimization
         if (dist2>=sun.pipeLength2) then
             target = target:normalized()*sun.pipeLength + energyPos
 			--Create a pipe here!
+			a.grid:clearDragPipe()
 			local pipe = a.grid:spawnPipe(energyPos, target, a)
 			display.getCurrentStage():setFocus(nil)
 			t.isFocus = false
@@ -51,6 +61,7 @@ function Touch:energyTouchEvent( )
 			return false
         end
     elseif event.phase == "ended" or event.phase == "cancelled" then
+		a.grid:clearDragPipe()
         display.getCurrentStage():setFocus( nil )
 		t.isFocus = false
     end
@@ -64,24 +75,27 @@ function Touch:pipeTouchEvent( )
     local event = self
 	local t = event.target -- the sprite involved
     local pipe = t.actor --the pipe involved in touch
-    local selectedPipeOverlay = pipe.selectedPipeOverlay
+    --local selectedPipeOverlay = pipe.selectedPipeOverlay
     if event.phase == "began" then
 		if pipe:canContinuePipe() then
 			display.getCurrentStage():setFocus( t )
 			t.isFocus = true
+			pipe.grid:setDragPipe(pipe.outPos,pipe.grid:unproject(event.x , event.y) )
 		else
 			return false
 		end
     elseif event.phase == "moved" then
         -- get in world touch position
         local touchPos = pipe.grid:unproject(event.x , event.y) 
-		
+		pipe.grid:setDragPipe(pipe.outPos,touchPos)
 		--Calculate distance to remove this pipe segment
 		local inPos = pipe.inPos
 		local targetIn = touchPos + -inPos
 		local distIn2 = targetIn:length2()
+		
 		if (distIn2 <= sun.pipeLength2*sun.removePipeTouchDistance2) then
 			--erase the pipe
+			pipe.grid:clearDragPipe()
 			t.isFocus = false
 			display.getCurrentStage():setFocus( pipe.In.sprite )
 			if pipe.In.sprite then pipe.In.sprite.isFocus = true end
@@ -104,6 +118,7 @@ function Touch:pipeTouchEvent( )
 				t.isFocus = false
 				display.getCurrentStage():setFocus(newPipe.sprite)
 				newPipe.sprite.isFocus = true
+				pipe.grid:clearDragPipe()
 				
 				newPipe.In = pipe
 				pipe.Out = newPipe
@@ -112,6 +127,7 @@ function Touch:pipeTouchEvent( )
 			end
 		end
     elseif event.phase == "ended" or event.phase == "cancelled" then
+		pipe.grid:clearDragPipe()
         display.getCurrentStage():setFocus( nil )
 		pipe.isFocus = false
     end

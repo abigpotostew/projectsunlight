@@ -77,7 +77,8 @@ end)
 
 Actor.removeSprite = Actor:makeMethod(function(self)
 	if (self.sprite and self.sprite.disposed == nil or self.sprite.disposed == false) then
-		self.sprite:clearEventListeners()
+		--self.sprite:clearEventListeners()
+		--TODO: may not be clearing event listeners properly here since above func is from other sprite class
 		self.sprite:removeSelf()
 		self.sprite.disposed = true
 	else

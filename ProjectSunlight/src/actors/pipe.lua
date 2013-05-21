@@ -24,7 +24,7 @@ Pipe:makeInit(function(class, self, x, y, angleDeg)
     --self.tile = tile
 	
 	self.sprite = self:createSprite('pipe100',x,y)
-	self.sprite.rotation = angleDeg+180 -- Add 180 so the ball part of the pipe is at end of the pipe
+	self.sprite.rotation = angleDeg+sun.pipeRotationOffset -- Add 180 so the ball part of the pipe is at end of the pipe
 	self.sprite.actor = self
 	
 	self.inPos = nil --beginning pos of the pipe, the SOURCE

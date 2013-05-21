@@ -13,7 +13,7 @@ print( system.getInfo( "maxTextureSize" ) )
 local physics = require("physics")
 physics.start()
 physics.setGravity(0.0,0.0)
-physics.setDrawMode("hybrid")
+--physics.setDrawMode("hybrid")
 --physics.setDrawMode("debug")
 
 local collision = require("src.collision")
