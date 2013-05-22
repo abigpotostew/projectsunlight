@@ -10,14 +10,16 @@ local util = require("src.util")
 require("mobdebug").start()
 print( system.getInfo( "maxTextureSize" ) )
 
+local collision = require("src.collision")
+collision.SetGroups{"pollution", "tower", "city", "energy", "terrain", "building", "pipe", "pipeOverlay"}--building is debug!
+
 local physics = require("physics")
 physics.start()
 physics.setGravity(0.0,0.0)
---physics.setDrawMode("hybrid")
+physics.setDrawMode("hybrid")
 --physics.setDrawMode("debug")
 
-local collision = require("src.collision")
-collision.SetGroups{"pollution", "tower", "city", "energy", "terrain", "building"}--building is debug!
+
 
 -- Disable undeclared globals
 --[[ setmetatable(_G, {

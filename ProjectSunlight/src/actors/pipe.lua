@@ -15,6 +15,7 @@ Pipe:makeInit(function(class, self, x, y, angleDeg)
     class.super:initWith(self)--pipes are 1x1 by default
     
     self.typeName = "pipe"
+    self.typeInfo =  {physics={category = self.typeName, colliders={"pipeOverlay"}}}
 	self.startConnection = nil -- could be energy source or something
 	self.endConnection = nil -- city or tower
     self.In = nil -- pointer to the previous pipe --In or pipe.NONE

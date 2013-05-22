@@ -265,33 +265,13 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 		local currTile = event.target
 		
 		if event.phase == "began" then
-			--local tileType = currTile.type
-			--if currTile:isEmpty() then
-				if(self.zoomState == IN )then
-					self.isDragging = true
-					self.group.xStart = self.group.x
-					self.group.yStart = self.group.y
-					self.group.xBegan = event.x
-					self.group.yBegan = event.y
-				end
-				--print("start scrolling")
-			--[[elseif currTile:canStartPipe() == true then
-				self.isPiping = true
-				self.startTile = currTile
-				self.prevTile = currTile
-                setSequence("overlay",self.selectedTileOverlay)
-				self.selectedTileOverlay.isVisible = true
-				self.selectedTileOverlay.x = currTile:x()
-				self.selectedTileOverlay.y = currTile:y()
-				--print("start piping WOO!")
-			else
-				self.isBadPiping = true
-				self.selectedTileOverlay.isVisible = true
-				setSequence("badpipe",self.selectedTileOverlay)
-				self.selectedTileOverlay.x = currTile:x()
-				self.selectedTileOverlay.y = currTile:y()
-				--print("bad pipe!")
-			end]]
+            if(self.zoomState == IN )then
+                self.isDragging = true
+                self.group.xStart = self.group.x
+                self.group.yStart = self.group.y
+                self.group.xBegan = event.x
+                self.group.yBegan = event.y
+            end
 		elseif event.phase == "moved" then
 			if self.isDragging == true then
 				local dx = event.x - self.group.xBegan
@@ -312,43 +292,6 @@ Grid.createTiles = Grid:makeMethod(function(self,  x, y, xMax, yMax, group )
 				end
 				self.group.x = x
 				self.group.y = y
-			--[[elseif self.isPiping == true then
-				print("is piping")
-				if currTile ~= self.prevTile then
-					local path = bresenhams(self.prevTile,currTile)
-					--local freshPipe = (canPipeHere(prevTile) == true and currentPipe < 0)
-					--if freshPipe then print("fresh!") end
-					local canPipe = self.prevTile:canStartPipe() and currTile:isEmpty()
-					if canPipe then print("can pipe!") end
-					--if self:getTileType(self.prevTile) == tile.ENERGY and currTile:isEmpty() then
-					--	self.pipeCount = self.pipeCount + 1
-					--end
-					--freshPipe == true or
-					if canPipe == true then
-						--if self.currentPipe < 0 then 
-						--	if self.prevTile.tile.type <= 0 then
-						--		self.currentPipe = self.pipeCount
-						--	else
-						--		self.currentPipe = self.prevTile.tile.type
-						--	end
-						--end
-						--currTile.tile.type = self.currentPipe
-						self.selectedTileOverlay.x = currTile:x()
-						self.selectedTileOverlay.y = currTile:y()
-						self:setPipe(currTile, self.prevTile)
-						--TODO:this is a possible bug,currently no diagonal pipe error check exists
-					else
-						self.isPiping = false
-						self.isBadPiping = true
-						self.selectedTileOverlay.x = currTile:x()
-						self.selectedTileOverlay.y = currTile:y()
-						setSequence("badpipe",self.selectedTileOverlay)
-					end
-				end
-			elseif self.isBadPiping == true then
-				print("bad pipe")
-				selectedTileOverlay.x = currTile.x()
-				selectedTileOverlay.y = currTile.y()]]
 			end	
 		elseif event.phase == "ended" or event.phase == "cancelled" then
 			--print("touch end")
@@ -438,18 +381,7 @@ end)
 
 --TODO:
 Grid.canBuildHere = Grid:makeMethod(function(self, tile, width, height)
-    --[[local xStart = tile.gridX
-    local yStart = tile.gridY
-    for x = xStart, xStart+width-1 do
-        for y = yStart, yStart+height-1 do
-            if x > gridRows or y > gridColumns or self.grid[x][y]:isEmpty() == false then
-                return false
-            end
-        end
-    end
-    return true]]
-    
-    
+
     --TODO: return a collision check whether this areas is clear
     return true
 end)
@@ -475,15 +407,7 @@ end)
 --assumes you've checked is these tiles are available with canBuildHere()
 Grid.insert = Grid:makeMethod(function(self, actor, insertIndex)
     assert(actor, "You must provide an actor when inserting an actor, ya doofus!")
-    
-    --[[local width = tileActor.width or 1
-    local height = tileActor.height or 1
-    
-    for x = gridX, gridX+width-1 do
-        for y = gridY, gridY+height-1 do
-            self.grid[x][y]:insert(tileActor)
-        end
-    end]]
+
     if insertIndex then
         self.group:insert(insertIndex, actor.sprite)
     else
@@ -590,12 +514,13 @@ Grid.unproject = Grid:makeMethod(function(self, screenX, screenY)
     return Vector2:init(targetx,targety)
 end)
 
-Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec)
+Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec, sourcePipe)
 	assert(startVec and touchVec, 'Please provide start and touch vectors')
 	local p = self.pipeOverlay
+    
 	if p then
 		local targetLocal = touchVec + -startVec
-		local scale = targetLocal:length()/sun.pipeLength
+		local scale = math.min(targetLocal:length()/sun.pipeLength,1)
 		local mid = startVec:mid(touchVec)
 		local angle = touchVec:angle(startVec)
 		angle = Util.RadToDeg(angle)
@@ -604,11 +529,25 @@ Grid.setDragPipe = Grid:makeMethod(function(self,startVec,touchVec)
 		p.sprite.y = mid.y
 		p.sprite.rotation = angle+sun.pipeRotationOffset
 		p.sprite.alpha = scale
+        physics.removeBody(p.sprite)
+        local w2, h2 = p.sprite.width*scale/2, p.sprite.height/2
+        p:addPhysics({shape={w2,h2,w2,-h2,-w2,-h2,-w2,h2}, category="pipeOverlay", colliders={"pipe"}})
 	else
-		self.pipeOverlay = self:spawnPipe(startVec,touchVec,nil,nil,Touch.null)
+		self.pipeOverlay = self:spawnPipe(startVec,touchVec,nil,nil,false,Touch.null)
 		self.pipeOverlay.sprite.alpha = 0.0
 		self.pipeOverlay.sprite.xScale = 0.01
-	end
+        local w2, h2 = self.pipeOverlay.sprite.width*0.01/2, self.pipeOverlay.sprite.height/2
+        self.pipeOverlay:addPhysics({shape={w2,h2,w2,-h2,-w2,-h2,-w2,h2},
+                category="pipeOverlay", colliders={"pipe"} })
+        local function dragPipeCollide(event)
+            if event.target.actor.In ~= event.other.actor then
+                --ALLOW a new pipe to be built
+            end
+            return true
+        end
+        self.pipeOverlay.In = sourcePipe
+        self.pipeOverlay.sprite:addEventListener("collision", dragPipeCollide)
+    end
 end)
 
 --Called after a pipe is built
@@ -619,7 +558,7 @@ Grid.clearDragPipe = Grid:makeMethod(function(self)
 	end
 end)
 
-Grid.spawnPipe = Grid:makeMethod(function(self,startVec, endVec,actorIn, actorOut, event)
+Grid.spawnPipe = Grid:makeMethod(function(self,startVec, endVec, actorIn, actorOut, makePhysics, event)
 	assert(startVec and endVec, 'Please provide start and end vector')
 	local targetLocal = endVec + -startVec
     --TODO: 90 should be a variable!!
@@ -636,6 +575,10 @@ Grid.spawnPipe = Grid:makeMethod(function(self,startVec, endVec,actorIn, actorOu
 	pipe.outPos = endPt+startVec 	 --end is the out direction
 	local e = event or Touch.pipeTouchEvent
 	pipe:addListener(pipe.sprite, "touch", e)
+    
+    if makePhysics then
+        pipe:addPhysics()
+    end
 	
 	return pipe
 end)

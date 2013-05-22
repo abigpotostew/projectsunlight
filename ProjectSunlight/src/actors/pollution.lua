@@ -46,8 +46,9 @@ end
 Pollution.collision = Pollution:makeMethod(function(self, event)
 	if (event.phase == "began") then
 		--print ("in ended :47")
-		print ("event object1:" .. event.other.typeName)
-		print ("event object2:" .. self.typeName)
+		--print ("event object1:" .. event.other.typeName)
+		--print ("event object2:" .. self.typeName)
+        print("Pollution collision")
 		
 		if (event.other.typeName == "radius") then
 		--audio.play(self.typeInfo.soundSet.hitHut)

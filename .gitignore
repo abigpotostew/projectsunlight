@@ -26,4 +26,6 @@ ProjectSunlight/.project
 
 *.REMOTE.*
 
-*.orig
+*.buildpath
+*.idea
+*.iml

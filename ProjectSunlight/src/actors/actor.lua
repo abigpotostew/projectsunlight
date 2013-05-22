@@ -108,17 +108,20 @@ Actor.addPhysics = Actor:makeMethod(function(self, data)
 	local mass = data.mass or self.typeInfo.physics.mass
 
 	local phys = {
-		--density = mass * 1000 / util.SumShapeAreas(self.sprite:anim():getShapes(scale)),  -- TODO: Precompute this,
 		density = 1, --we don't care about density
 		friction = data.friction or self.typeInfo.physics.friction,
 		bounce = data.bounce or self.typeInfo.physics.bounce,
-		--filter = collision.MakeFilter(data.category or self.typeInfo.physics.category,
-		--	data.colliders or self.typeInfo.physics.colliders),
-		isSensor = self.typeInfo.physics.isSensor or true,
+		filter = collision.MakeFilter(data.category or self.typeInfo.physics.category,
+			data.colliders or self.typeInfo.physics.colliders),
+		isSensor = data.isSensor or self.typeInfo.physics.isSensor or true,
+        bodyType = data.bodyType or self.typeInfo.physics.bodyType or "kinematic"
 	}
+    --Optionally set a custom shape for the actor. Default uses sprite to shape it
+    if data.shape or self.typeInfo.physics.shape then
+        phys.shape = data.shape or self.typeInfo.physics.shape
+    end    
 
 	physics.addBody(self.sprite, phys)
-	self.sprite.bodyType = self.typeInfo.physics.bodyType or "kinematic"
 end)
 
 Actor.addTimer = Actor:makeMethod(function(self, delay, callback, count)
